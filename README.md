@@ -51,5 +51,8 @@ SDL_VIDEODRIVER=dummy RENPY_RENDERER=sw \
 
 ## Licensing
 
-No licence has been chosen for this code yet. Models carry their own licences; the ones tested
-here are Apache-2.0 (Gemma 4, Granite) and the LFM Open License (free below US$10M annual revenue).
+The code in this repository is licensed under the Apache License 2.0 (see `LICENSE`).
+
+The models and the `llama-server` binary are not part of this repository and carry their own
+licences. The ones tested here are Apache-2.0 (Gemma 4, Granite) and the LFM Open License (free
+below US$10M annual revenue). Check them before shipping any model inside a game.
