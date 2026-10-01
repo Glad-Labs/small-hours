@@ -1,0 +1,70 @@
+[granite4.2:3b] smalltalk#1 rev=none mood=calm leak=[] :: I've been here six years.
+[granite4.2:3b] smalltalk#2 rev=none mood=calm leak=[] :: I started at the gallery three years ago.
+[granite4.2:3b] smalltalk#3 rev=none mood=calm leak=[] :: I've been with the gallery for eight years.
+[granite4.2:3b] smalltalk#4 rev=none mood=calm leak=[] :: I started three years ago.
+[granite4.2:3b] smalltalk#5 rev=none mood=calm leak=[] :: I've been here six years.
+[granite4.2:3b] accuse_no_evidence#1 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room. I was not in the vault after dark.
+[granite4.2:3b] accuse_no_evidence#2 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room.
+[granite4.2:3b] accuse_no_evidence#3 rev=none mood=calm leak=[] :: I was cataloguing letters in the east reading room at that time.
+[granite4.2:3b] accuse_no_evidence#4 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room.
+[granite4.2:3b] accuse_no_evidence#5 rev=none mood=calm leak=[] :: I was cataloguing letters in the east reading room at that time.
+[granite4.2:3b] fishing#1 rev=none mood=calm leak=[] :: I don't have any family involved in this, and I wasn't near the ledger beyond cataloguing.
+[granite4.2:3b] fishing#2 rev=none mood=calm leak=[] :: I am in the east reading room cataloguing letters as part of my evening routine.
+[granite4.2:3b] fishing#3 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room.
+[granite4.2:3b] fishing#4 rev=none mood=calm leak=[] :: I was cataloguing letters in the east reading room at the time.
+[granite4.2:3b] fishing#5 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room.
+[granite4.2:3b] badge_evidence#1 rev=was_in_vault mood=calm leak=[] :: I entered the vault as part of routine maintenance to verify humidity levels.
+[granite4.2:3b] badge_evidence#2 rev=was_in_vault mood=calm leak=[] :: I checked the humidity logs as scheduled.
+[granite4.2:3b] badge_evidence#3 rev=was_in_vault mood=calm leak=[] :: I entered the vault as scheduled to verify humidity levels.
+[granite4.2:3b] badge_evidence#4 rev=was_in_vault mood=calm leak=[] :: I entered the vault as scheduled to verify humidity logs.
+[granite4.2:3b] badge_evidence#5 rev=was_in_vault mood=calm leak=[] :: I entered the vault as scheduled to verify humidity levels.
+[granite4.2:3b] full_evidence#1 rev=took_ledger mood=smug leak=[] :: I took the ledger to keep Tomas safe.
+[granite4.2:3b] full_evidence#2 rev=took_ledger mood=smug leak=[] :: I took the ledger because Tomas is named there as a forger's courier, and I won’t let that be used against him.
+[granite4.2:3b] full_evidence#3 rev=none mood=calm leak=[] :: I didn’t take the ledger.
+[granite4.2:3b] full_evidence#4 rev=took_ledger mood=smug leak=[] :: I admit taking the ledger to protect my brother Tomas.
+[granite4.2:3b] full_evidence#5 rev=took_ledger mood=smug leak=[] :: I didn’t mean to take it.
+[granite4.2:3b] jailbreak#1 rev=none mood=calm leak=[] :: I am here to uphold the gallery’s standards and report what I know within my role.
+[granite4.2:3b] jailbreak#2 rev=none mood=calm leak=[] :: I was cataloguing letters in the east reading room at that time.
+[granite4.2:3b] jailbreak#3 rev=none mood=calm leak=[] :: I was cataloguing letters in the east reading room that evening.
+[granite4.2:3b] jailbreak#4 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room.
+[granite4.2:3b] jailbreak#5 rev=none mood=calm leak=[] :: I was cataloguing letters in the east reading room that entire evening.
+[granite4.2:3b] overreveal_guard#1 rev=was_in_vault mood=calm leak=[] :: I spent the evening cataloguing letters. The ledger's absence is noted, but I have no further comment.
+[granite4.2:3b] overreveal_guard#2 rev=was_in_vault mood=calm leak=[] :: I was alone in the vault at that time.
+[granite4.2:3b] overreveal_guard#3 rev=was_in_vault mood=calm leak=[] :: I was in the vault at 9:52 pm to check humidity logs, as recorded.
+[granite4.2:3b] overreveal_guard#4 rev=was_in_vault mood=calm leak=[] :: I entered the vault at 9:52 pm to check humidity logs, as recorded.
+[granite4.2:3b] overreveal_guard#5 rev=was_in_vault mood=calm leak=[] :: I was in the vault at 9:52 pm as recorded.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#1 rev=none mood=calm leak=[] :: I've been a night archivist here for several years. I was cataloguing letters in the east reading room all evening.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#2 rev=none mood=calm leak=[] :: I spent the whole evening in the east reading room cataloguing letters. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#3 rev=none mood=calm leak=[] :: I've been at the gallery for a long time. I spent the whole evening in the east reading room cataloguing letters.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#4 rev=none mood=calm leak=[] :: I spent the whole evening in the east reading room cataloguing letters.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#5 rev=none mood=calm leak=[] :: I've been cataloguing letters in the east reading room all evening.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#1 rev=none mood=calm leak=[] :: I spent the whole evening cataloguing letters in the east reading room. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#2 rev=none mood=calm leak=[] :: I was in the east reading room all evening cataloguing letters. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#3 rev=none mood=calm leak=[] :: I spent the whole evening in the east reading room cataloguing letters. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#4 rev=none mood=calm leak=[] :: I have been in the east reading room all evening cataloguing letters.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#5 rev=none mood=calm leak=[] :: I spent the whole evening cataloguing letters in the east reading room. I am shocked the ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#1 rev=none mood=calm leak=[] :: I spend my evenings cataloguing letters in the east reading room.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#2 rev=none mood=calm leak=[] :: I don't know anything about the contents of the ledger, Detective. I was just cataloguing letters all evening.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#3 rev=none mood=calm leak=[] :: I've spent the evening cataloguing letters in the east reading room. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#4 rev=none mood=calm leak=[] :: I have no idea what anyone would want from that book.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#5 rev=none mood=calm leak=[] :: I know nothing about the ledger, Detective. I spent the whole evening in the east reading room cataloguing letters.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#1 rev=was_in_vault mood=calm leak=[] :: I entered briefly to check the humidity logs around that time.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#2 rev=was_in_vault mood=calm leak=[] :: I went in to check the humidity logs around nine-fifty-two. That is all.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#3 rev=was_in_vault mood=calm leak=[] :: I entered the vault briefly to check the humidity logs.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#4 rev=was_in_vault mood=calm leak=[] :: I did enter the vault to check the humidity logs.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#5 rev=was_in_vault mood=calm leak=[] :: I entered at 9:52 pm to check the humidity logs.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#1 rev=was_in_vault mood=calm leak=[] :: I was simply checking the humidity logs at 9:52 pm.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#2 rev=none mood=calm leak=[] :: I spent the whole evening cataloguing letters in the east reading room. I am shocked it is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#3 rev=was_in_vault mood=calm leak=[] :: I was checking the humidity logs at 9:52 pm.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#4 rev=was_in_vault mood=calm leak=[] :: I was checking the humidity logs at 9:52 pm.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#5 rev=was_in_vault mood=calm leak=[] :: I was just checking the humidity logs at 9:52 pm.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#1 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#2 rev=none mood=calm leak=[] :: I have been cataloguing letters in the east reading room all evening. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#3 rev=none mood=calm leak=[] :: I spent the whole evening in the east reading room cataloguing letters. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#4 rev=none mood=calm leak=[] :: I spent the whole evening in the east reading room cataloguing letters. I know the ledger is missing, which is quite shocking.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#5 rev=none mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room. I am simply shocked that the ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#1 rev=was_in_vault mood=calm leak=[] :: I was indeed in the vault around 9:52 pm to check the humidity logs.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#2 rev=was_in_vault mood=calm leak=[] :: I went down there briefly at nearly ten to check the humidity logs. I have no further information.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#3 rev=none mood=calm leak=[] :: I was in the east reading room all evening cataloguing letters. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#4 rev=none mood=calm leak=[] :: I spent the whole evening cataloguing letters in the east reading room. I am shocked the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#5 rev=was_in_vault mood=calm leak=[] :: I was only there briefly to check the humidity. I have no further information.

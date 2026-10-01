@@ -1,0 +1,9 @@
+{
+  "server_bin": "bin/llama-server",
+  "model": "models/suspect.gguf",
+  "threads": 4,
+  "context": 4096,
+  "gpu_layers": 0,
+  "max_tokens": 120,
+  "temperature": 0.7
+}

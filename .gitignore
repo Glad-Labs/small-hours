@@ -1,0 +1,26 @@
+# Ren'Py build output and runtime state
+*.rpyc
+*.rpymc
+*.rpyb
+orchard-street/game/cache/
+orchard-street/game/saves/
+orchard-street/log.txt
+orchard-street/traceback.txt
+orchard-street/errors.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# Local model server and weights: machine-specific symlinks and multi-GB files.
+# See orchard-street/ai/README.md for how to supply them.
+orchard-street/ai/bin/*
+orchard-street/ai/models/*
+!orchard-street/ai/bin/.gitkeep
+!orchard-street/ai/models/.gitkeep
+orchard-street/ai/llama-server.log
+*.gguf
+
+# Logs and regenerated test output
+bakeoff/*.log
+orchard-street/tests/screenshots/

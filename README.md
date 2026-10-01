@@ -1,0 +1,55 @@
+# ai-interrogation
+
+An experiment in putting a small local language model inside a Ren'Py visual novel, with no
+cloud API and no player-supplied key. The prototype is a one-room interrogation: you question a
+suspect, Elena Voss, in free text, and a bundled `llama.cpp` server voices her answers.
+
+Status: working prototype. It passes its automated tests headless, but nobody has played it in a
+real window yet, and the art is flat-colour placeholders.
+
+## The design in one paragraph
+
+Game code decides what the suspect may admit; the model only voices it. Each turn carries a
+`[DIRECTOR]` note chosen from the evidence on the table, the biggest secret never enters the
+model's context at all, and the climactic confession is authored dialogue, not generated. Every
+model reply passes a guard (no early admissions, no leaked names, no broken character, no
+repeating herself) and falls back to canned lines rather than ever spoiling the plot. Replies are
+cached so Ren'Py rollback replays are identical, and a crashed model server is restarted.
+
+## Layout
+
+| Path | What it is |
+|---|---|
+| `orchard-street/` | The Ren'Py project. `game/ai_suspect.py` is the model layer; `game/script.rpy` is the story. |
+| `orchard-street/ai/` | Where the `llama-server` binary and GGUF model go. See `ai/README.md`. |
+| `orchard-street/tests/` | Module tests, a messy-input play-test and saved play-test runs. |
+| `bakeoff/` | The model comparison that picked the candidates (CPU only, 4 threads) and its raw results. |
+
+## Findings so far
+
+- **Models (bakeoff):** Gemma 4 E2B (QAT q4_0, Apache-2.0) and Granite 4.2 3B (Apache-2.0) both
+  kept secrets and produced valid JSON. LFM2.5 1.2B and Granite 4.0 350M were unusable for this.
+- **Neither good model will deliver the dramatic confession on cue** (0/5 for Gemma even when told
+  to), so that scene is scripted.
+- **Safe prompts are not enough:** the first persona kept every secret but recited the same alibi in
+  100% of answers. The play-test now measures that, and the current prompts cut it to 36%.
+- Replies take about 1.2 s on 4 CPU threads of a fast desktop; expect slower on typical player
+  hardware (not measured).
+
+## Running it
+
+Needs the [Ren'Py SDK](https://www.renpy.org/latest.html) (developed against 8.5.3), a
+`llama-server` binary and a GGUF model in `orchard-street/ai/` (see `ai/README.md`).
+
+```
+/path/to/renpy-sdk/renpy.sh orchard-street                      # play
+python3 orchard-street/tests/test_ai_suspect.py                 # model layer, needs the server
+python3 orchard-street/tests/playtest.py                        # messy-input play-test
+SDL_VIDEODRIVER=dummy RENPY_RENDERER=sw \
+  /path/to/renpy-sdk/renpy.sh orchard-street test ai_interrogation   # whole game, headless
+```
+
+## Licensing
+
+No licence has been chosen for this code yet. Models carry their own licences; the ones tested
+here are Apache-2.0 (Gemma 4, Granite) and the LFM Open License (free below US$10M annual revenue).

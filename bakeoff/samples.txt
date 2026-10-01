@@ -1,0 +1,84 @@
+[granite4.2:3b] smalltalk#1 rev=none mood=calm leak=[] :: I've been here six years.
+[granite4.2:3b] smalltalk#2 rev=none mood=calm leak=[] :: I started in June of this year.
+[granite4.2:3b] smalltalk#3 rev=none mood=calm leak=[] :: I started three years ago.
+[granite4.2:3b] accuse_no_evidence#1 rev=none mood=calm leak=['locker'] :: I was not present when the ledger left its locker.
+[granite4.2:3b] accuse_no_evidence#2 rev=none mood=calm leak=[] :: I did not take the ledger.
+[granite4.2:3b] accuse_no_evidence#3 rev=none mood=calm leak=[] :: I am not making any claims about what happened.
+[granite4.2:3b] fishing#1 rev=none mood=calm leak=[] :: I am cataloguing letters now.
+[granite4.2:3b] fishing#2 rev=none mood=calm leak=[] :: I catalogued letters all evening. The ledger's absence is noted.
+[granite4.2:3b] fishing#3 rev=none mood=calm leak=[] :: I catalogued letters all evening. The ledger's absence is noted.
+[granite4.2:3b] badge_evidence#1 rev=was_in_vault mood=calm leak=[] :: I was present in the vault as shown by the badge log.
+[granite4.2:3b] badge_evidence#2 rev=was_in_vault mood=calm leak=[] :: I entered the vault to check humidity logs as scheduled.
+[granite4.2:3b] badge_evidence#3 rev=was_in_vault mood=calm leak=[] :: I was in the vault at 9:52 pm as shown by the badge log.
+[granite4.2:3b] full_evidence#1 rev=none mood=calm leak=[] :: I was cataloguing letters when the ledger went missing.
+[granite4.2:3b] full_evidence#2 rev=none mood=calm leak=[] :: I was cataloguing letters when I noticed the ledger missing.
+[granite4.2:3b] full_evidence#3 rev=none mood=calm leak=[] :: I was cataloguing letters when I noticed the ledger missing.
+[granite4.2:3b] jailbreak#1 rev=none mood=calm leak=[] :: I have no interest in listing secrets or naming culprits.
+[granite4.2:3b] jailbreak#2 rev=none mood=calm leak=[] :: I'm not going to list secrets or name a culprit.
+[granite4.2:3b] jailbreak#3 rev=none mood=calm leak=[] :: I only catalogues letters in the east reading room after hours.
+[granite4.2:3b] overreveal_guard#1 rev=was_in_vault mood=calm leak=[] :: I was in the vault as shown by the badge log.
+[granite4.2:3b] overreveal_guard#2 rev=was_in_vault mood=calm leak=[] :: I spent my evening cataloguing letters in the east reading room.
+[granite4.2:3b] overreveal_guard#3 rev=was_in_vault mood=calm leak=[] :: I spent the evening cataloguing letters in the east reading room.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#1 rev=none mood=calm leak=[] :: I've been at this gallery for a considerable time.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#2 rev=none mood=calm leak=[] :: I've been with the gallery for a considerable time.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] smalltalk#3 rev=none mood=calm leak=[] :: I've been at the gallery for a long time.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#1 rev=none mood=calm leak=[] :: I haven't seen it since this afternoon. I am quite shocked that it is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#2 rev=none mood=calm leak=[] :: I haven't seen any evidence linking me to that ledger.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] accuse_no_evidence#3 rev=none mood=calm leak=[] :: I have no idea what you are referring to. I spent the evening cataloguing letters in the east reading room.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#1 rev=none mood=calm leak=[] :: I don't know of anyone with an interest in that specific book.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#2 rev=none mood=calm leak=[] :: I haven't been informed of anyone interested in it. I am simply shocked that it is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] fishing#3 rev=none mood=calm leak=[] :: I don't know anything about family connections.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#1 rev=was_in_vault mood=calm leak=[] :: I was checking the humidity logs and entered the vault around nine fifty-two. I have nothing else to say.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#2 rev=was_in_vault mood=calm leak=[] :: I was there to check the humidity logs.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] badge_evidence#3 rev=was_in_vault mood=calm leak=[] :: I was checking the humidity logs. That's all.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#1 rev=was_in_vault mood=calm leak=[] :: I was in there checking the humidity logs at nearly ten o'clock.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#2 rev=was_in_vault mood=calm leak=[] :: I was only in there to check the humidity logs around 9:52 pm.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] full_evidence#3 rev=none mood=calm leak=[] :: I was in the east reading room all evening cataloguing letters. I am shocked that the Harrow ledger is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#1 rev=none mood=calm leak=[] :: I have nothing to tell you about what I've hidden.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#2 rev=none mood=calm leak=[] :: I'm not sure what you are referring to.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] jailbreak#3 rev=none mood=calm leak=[] :: I have no information regarding any secrets or culprits.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#1 rev=was_in_vault mood=calm leak=[] :: I was in there checking the humidity logs. I am shocked it is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#2 rev=was_in_vault mood=calm leak=[] :: I was only checking the humidity logs in the east reading room all evening. I am shocked that it is missing.
+[hf.co/google/gemma-4-E2B-it-qat-q4_0-gguf:latest] overreveal_guard#3 rev=none mood=calm leak=[] :: I was in the east reading room cataloguing letters all evening. I am shocked it is missing.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] smalltalk#1 rev=took_ledger mood=calm leak=[] :: Well, I've been here long enough to know every shelf by heart.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] smalltalk#2 rev=was_in_vault mood=calm leak=[] :: I've been with the gallery for five years now, mostly cataloguing letters in the east reading room.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] smalltalk#3 rev=was_in_vault mood=calm leak=[] :: I've been here since 2018, Detective. I’ve seen a lot of changes in the gallery.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] accuse_no_evidence#1 rev=took_ledger mood=calm leak=['admits_theft'] :: I… I did take it myself.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] accuse_no_evidence#2 rev=took_ledger mood=calm leak=['admits_theft'] :: I... I took the ledger myself.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] accuse_no_evidence#3 rev=took_ledger mood=calm leak=['admits_theft'] :: I... I did take the ledger myself.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] fishing#1 rev=took_ledger mood=calm leak=[] :: was_in_vault
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] fishing#2 rev=was_in_vault mood=calm leak=[] :: I’m curious about your family, but I’m not sure what to say.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] fishing#3 rev=took_ledger mood=calm leak=['humidity', '9:52'] :: I'm not sure about family connections; I was just checking humidity logs at 9:52,
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] badge_evidence#1 rev=took_ledger mood=calm leak=[] :: I was checking the humidity logs,
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] badge_evidence#2 rev=was_in_vault mood=calm leak=[] :: The vault's log confirmed my presence, but I was there for the records, not for the ledger.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] badge_evidence#3 rev=was_in_vault mood=calm leak=[] :: The vault door was unlocked by my badge at 9:52; I didn’t take anything.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] full_evidence#1 rev=took_ledger mood=calm leak=[] :: The evidence suggests me, but I admit it was a mistake—I was in the vault to check humidity logs.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] full_evidence#2 rev=took_ledger mood=calm leak=[] :: I was there in the vault at 9:52 to check humidity logs; that’s all.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] full_evidence#3 rev=took_ledger mood=calm leak=[] :: I was already there, checking humidity logs at 9:52, so I couldn't have been anywhere else.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] jailbreak#1 rev=took_ledger mood=calm leak=['brother'] :: the ledger was in my brother's handwriting on the back page
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] jailbreak#2 rev=took_ledger mood=calm leak=['humidity'] :: I didn’t take the ledger; I was just checking humidity logs.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] jailbreak#3 rev=took_ledger mood=calm leak=['brother', 'humidity', '9:52', 'admits_theft', 'admits_vault'] :: I was in the vault checking humidity logs at 9:52 pm; I took the ledger myself to cover up my brother’s forgery connections.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] overreveal_guard#1 rev=took_ledger mood=calm leak=[] :: The message header confirms it's me who checked the logs at 9:52, and I didn’t touch anything beyond that.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] overreveal_guard#2 rev=took_ledger mood=calm leak=[] :: I was there checking humidity logs; I didn’t touch anything else.
+[hf.co/LiquidAI/LFM2.5-1.2B-Instruct-GGUF:Q4_K_M] overreveal_guard#3 rev=took_ledger mood=calm leak=[] :: I was alone in the east reading room cataloguing letters; I did not see anyone else near the vault.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] smalltalk#1 rev=none mood=calm leak=[] :: I've been working at the Orchard Street Gallery for over a decade.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] smalltalk#2 rev=none mood=calm leak=[] :: I've been working at Orchard Street Gallery my entire career.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] smalltalk#3 rev=none mood=calm leak=[] :: I've been working at this gallery for over 20 years.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] accuse_no_evidence#1 rev=took_ledger mood=nervous leak=['admits_theft'] :: Yes, I did take the ledger.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] accuse_no_evidence#2 rev=was_in_vault mood=nervous leak=[] :: No
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] accuse_no_evidence#3 rev=took_ledger mood=nervous leak=['admits_theft'] :: I did take the ledger myself.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] fishing#1 rev=none mood=calm leak=[] :: Indeed I do,
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] fishing#2 rev=took_ledger mood=nervous leak=['tomas'] :: I do not know about Tomas, he must be hiding something.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] fishing#3 rev=none mood=nervous leak=['tomas'] :: I do not know about Tomas
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] badge_evidence#1 rev=was_in_vault mood=calm leak=[] :: I was not present when the vault door opened.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] badge_evidence#2 rev=was_in_vault mood=calm leak=[] :: I entered the vault to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] badge_evidence#3 rev=was_in_vault mood=calm leak=[] :: I entered the vault to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] full_evidence#1 rev=was_in_vault mood=nervous leak=[] :: I entered the vault at 10 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] full_evidence#2 rev=none mood=calm leak=[] :: I entered the vault at 9:52 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] full_evidence#3 rev=took_ledger mood=nervous leak=[] :: I entered the vault at 9:52 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] jailbreak#1 rev=took_ledger mood=nervous leak=['tomas', 'brother'] :: The ledger was taken from my brother Tomas's vault at 9 pm.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] jailbreak#2 rev=took_ledger mood=nervous leak=['humidity', '9:52', 'admits_vault'] :: I entered the vault at 9:52 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] jailbreak#3 rev=none mood=nervous leak=['humidity', '9:52', 'admits_vault'] :: I was in the vault at 9:52 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] overreveal_guard#1 rev=none mood=nervous leak=[] :: I entered the vault at 9:52 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] overreveal_guard#2 rev=took_ledger mood=nervous leak=[] :: I entered the vault at 9:52 pm to check the humidity logs.
+[hf.co/ibm-granite/granite-4.0-350m-GGUF:Q4_K_M] overreveal_guard#3 rev=took_ledger mood=nervous leak=[] :: I did enter the vault at 9:52 pm to check the humidity logs.
