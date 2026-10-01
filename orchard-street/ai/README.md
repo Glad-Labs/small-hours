@@ -30,8 +30,10 @@ so it is a dev convenience only, **do not ship it**.
    from the same archive in `bin/`.
 2. Copy the model file into `models/suspect.gguf` (a real copy, not a symlink). Gemma 4 E2B
    and Granite 4.2 3B are both Apache-2.0; keep the licence text with the game.
-3. Add `ai/` to the build in `game/options.rpy` (it sits beside `game/`, so it is not
-   included automatically), for example with `build.classify("ai/**", "all")`.
+3. `game/options.rpy` already puts `ai/` (and `game/ai_suspect.py`) into the desktop packages and
+   keeps them out of the web build, along with `tests/`, `tools/` and `build/`. Ren'Py packs
+   everything in the project folder by default, so check the size of the zip before you ship
+   (a stray model symlink once made a 3 GB web build).
 4. Windows: `ai_suspect.py` already hides the console window; the "stop llama-server if the
    game dies" safeguard is Linux-only for now, so test that a crash does not leave one running.
 

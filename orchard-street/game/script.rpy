@@ -1,12 +1,27 @@
 ## Orchard Street: a one-room interrogation prototype.
 ##
-## The local model only voices Elena's open-ended answers. This script decides what she may
-## admit (ai_suspect.director_level) and plays the confession as authored dialogue.
+## The model only voices Elena's open-ended answers. This script decides what she may
+## admit (suspect_client.director_level) and plays the confession as authored dialogue.
+##
+## Two ways to reach the model:
+##   * desktop: ai_suspect starts a bundled llama-server and talks to it directly;
+##   * browser (or ORCHARD_REMOTE_URL set): the page asks tools/serve_web.py on the PC, because a
+##     browser can run neither threads nor a model server. See suspect_client.py.
 
 init python:
-    import ai_suspect
+    import suspect_client
 
-    config.quit_callbacks.append(lambda: ai_suspect.get().stop())
+    REMOTE = suspect_client.remote_url() is not None
+    if not REMOTE:
+        import ai_suspect
+        config.quit_callbacks.append(lambda: ai_suspect.get().stop())
+
+    def end_game():
+        """Desktop closes the game; a browser tab cannot quit, so it restarts for another go."""
+        if renpy.emscripten:
+            renpy.full_restart()
+        else:
+            renpy.quit()
 
     def placeholder(label, color):
         """Flat-colour stand-in for character art."""
@@ -15,11 +30,18 @@ init python:
                      xysize=(300, 460))
 
     def ai_status_text():
+        if REMOTE:
+            return suspect_client.status_text()
         return {"idle": "AI: not started", "loading": "AI: loading model...",
                 "ready": "AI: ready", "offline": "AI: offline (canned lines)"}[ai_suspect.get().status]
 
     def ask_elena(level, question):
         """Ask the model and wait without freezing the window. Returns (line, source, seconds)."""
+        if REMOTE:
+            renpy.show_screen("thinking")
+            answer = suspect_client.ask(level, question, history)   # renpy.fetch keeps the window alive
+            renpy.hide_screen("thinking")
+            return answer
         reply = ai_suspect.get().ask(level, question, history)
         renpy.show_screen("thinking")
         while not reply.done:
@@ -58,7 +80,8 @@ default ai_seconds = []
 
 label start:
     python:
-        ai_suspect.get().start()    # begin loading the model while the player reads the intro
+        if not REMOTE:
+            ai_suspect.get().start()    # begin loading the model while the player reads the intro
 
     scene bg office
     show elena guarded at stage
@@ -139,7 +162,7 @@ label present_evidence:
 
 ## The heart of the design: code picks the level, the model (or a scripted scene) delivers it.
 label elena_answers(question):
-    $ level = ai_suspect.director_level(presented, admitted_vault)
+    $ level = suspect_client.director_level(presented, admitted_vault)
 
     if level == "confess":
         $ confess_now = True
@@ -182,11 +205,11 @@ label confession:
         typical = waits[len(waits) // 2] if waits else 0
     "Elena's answers: [ai_turns] from the local model (typical wait [typical] s), [canned_turns] canned."
 
-    $ renpy.quit()
+    $ end_game()
     return
 
 
 label leave:
     "You leave the archive. The case stays open."
-    $ renpy.quit()
+    $ end_game()
     return

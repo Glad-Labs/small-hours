@@ -22,6 +22,7 @@ cached so Ren'Py rollback replays are identical, and a crashed model server is r
 |---|---|
 | `orchard-street/` | The Ren'Py project. `game/ai_suspect.py` is the model layer; `game/script.rpy` is the story. |
 | `orchard-street/ai/` | Where the `llama-server` binary and GGUF model go. See `ai/README.md`. |
+| `orchard-street/tools/serve_web.py` | Serves the browser build and the model to a phone over Tailscale. |
 | `orchard-street/tests/` | Module tests, a messy-input play-test and saved play-test runs. |
 | `bakeoff/` | The model comparison that picked the candidates (CPU only, 4 threads) and its raw results. |
 
@@ -48,6 +49,25 @@ python3 orchard-street/tests/playtest.py                        # messy-input pl
 SDL_VIDEODRIVER=dummy RENPY_RENDERER=sw \
   /path/to/renpy-sdk/renpy.sh orchard-street test ai_interrogation   # whole game, headless
 ```
+
+## Playing from a phone (Tailscale)
+
+A browser cannot run threads, sockets or a model server, so the web build asks this PC for each
+answer: the page POSTs to `/api/suspect` on the same server that served it, using `renpy.fetch`.
+The persona prompt (`game/ai_suspect.py`) and the model stay on the PC and are not in the web build.
+
+```
+# once: build the browser version (needs the Ren'Py web package in the SDK's web/ folder)
+/path/to/renpy-sdk/renpy.sh launcher web_build orchard-street --destination orchard-street/build/web
+
+# whenever you want to play: needs the PC on, Tailscale on both devices
+python3 orchard-street/tools/serve_web.py     # prints the address to open on the phone
+```
+
+The server binds to the Tailscale address only, never `0.0.0.0`, so only devices on your own
+tailnet can reach it. There is no other login, so do not put it behind `tailscale funnel`. Hold the
+phone in landscape; tapping the text field opens the phone's keyboard. Tests:
+`python3 orchard-street/tests/test_serve_web.py`.
 
 ## Licensing
 

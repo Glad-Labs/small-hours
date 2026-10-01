@@ -19,8 +19,11 @@ orchard-street/ai/models/*
 !orchard-street/ai/bin/.gitkeep
 !orchard-street/ai/models/.gitkeep
 orchard-street/ai/llama-server.log
+orchard-street/ai/serve.log
 *.gguf
 
 # Logs and regenerated test output
+orchard-street/build/
+orchard-street/progressive_download.txt
 bakeoff/*.log
 orchard-street/tests/screenshots/

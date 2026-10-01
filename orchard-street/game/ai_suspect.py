@@ -12,7 +12,6 @@ saving never try to pickle a thread or a subprocess. It also runs outside Ren'Py
 """
 import atexit
 import difflib
-import hashlib
 import json
 import os
 import re
@@ -24,6 +23,8 @@ import threading
 import time
 import urllib.error
 import urllib.request
+
+from suspect_client import FALLBACKS, canned_line, director_level, reply_key  # noqa: F401
 
 try:
     import renpy
@@ -108,36 +109,7 @@ SCHEMA = {
     "required": ["line", "revealed"],
 }
 
-# Shown when the model is unavailable or breaks a rule. Picked deterministically from the
-# question, so a rollback replay shows the same line.
-FALLBACKS = {
-    "none": [
-        "I've told you where I was, Detective. The east reading room, all evening.",
-        "I'm sure you have questions. I have very few answers.",
-        "Ask me something that isn't a trap and I'll answer it.",
-    ],
-    "vault": [
-        "Yes. I went into the vault at 9:52 to check the humidity logs. That is all I did.",
-        "The vault, at 9:52, for the humidity logs. Nothing more than that.",
-    ],
-    "vault_known": [
-        "I've admitted the vault and the humidity logs. I won't be baited into more.",
-        "I was checking the humidity logs, as I said. Ask me about something else.",
-    ],
-}
-
-
-def director_level(evidence, admitted_vault):
-    """What the game lets Elena admit, from the evidence the player has put on the table.
-
-    "confess" is not voiced by the model at all; the script plays an authored scene.
-    """
-    ev = set(evidence)
-    if {"badge_log", "ledger_in_locker"} <= ev:
-        return "confess"
-    if "badge_log" in ev:
-        return "vault_known" if admitted_vault else "vault"
-    return "none"
+# FALLBACKS, director_level and the reply key live in suspect_client so the browser build can use them.
 
 
 # --- Guard -------------------------------------------------------------------
@@ -346,7 +318,7 @@ class SuspectAI:
         reply = Reply()
         self.start()    # no-op if already started
         history = [tuple(h) for h in history][-MAX_HISTORY:]
-        key = hashlib.sha1(json.dumps([level, question.strip().lower(), history]).encode()).hexdigest()
+        key = reply_key(level, question, history)
         cached = self._cache.get(key)
         if cached:
             reply.line, reply.revealed, reply.note = cached
@@ -382,8 +354,7 @@ class SuspectAI:
                 reply.line, reply.revealed, reply.source = data["line"].strip(), data["revealed"], "ai"
                 self._cache[key] = (reply.line, reply.revealed, reply.note)
             else:
-                options = FALLBACKS[level]
-                reply.line = options[int(key[8:12], 16) % len(options)]
+                reply.line = canned_line(level, key)
                 reply.revealed = "was_in_vault" if level == "vault" else "none"
                 reply.source, reply.note = "canned", note
         finally:

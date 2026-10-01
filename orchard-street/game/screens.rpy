@@ -78,7 +78,8 @@ screen confirm(message, yes_action, no_action):
 ## Always-on overlay: evidence board, model status and a quit button.
 screen hud():
     zorder 50
-    key "game_menu" action Quit(confirm=True)
+    if not renpy.emscripten:
+        key "game_menu" action Quit(confirm=True)
 
     frame:
         xpos 20
@@ -104,7 +105,8 @@ screen hud():
         hbox:
             spacing 24
             text ai_status_text() size 20 color "#9fb3c8"
-            textbutton "Quit" action Quit(confirm=True) text_size 20
+            if not renpy.emscripten:
+                textbutton "Quit" action Quit(confirm=True) text_size 20
 
     ## The model loads in the background; refresh so the status text updates.
     timer 1.0 repeat True action Function(renpy.restart_interaction)
