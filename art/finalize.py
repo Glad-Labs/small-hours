@@ -15,7 +15,7 @@ os.makedirs(DST, exist_ok=True)
 
 for name in sorted(os.listdir(SRC)):
     base, ext = os.path.splitext(name)
-    if ext != ".png" or base.endswith("_fast"):
+    if ext != ".png" or base.endswith("_fast") or "stylised" in base:
         continue
     img = Image.open(os.path.join(SRC, name))
     out = os.path.join(DST, base + ".webp")

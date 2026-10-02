@@ -182,6 +182,8 @@ label elena_answers(question):
     if source == "ai":
         $ ai_turns += 1
         $ ai_seconds.append(round(secs, 1))
+    elif source == "cache":
+        $ ai_turns += 1             # a repeat or a rollback replay: still a model answer, just not a new wait
     else:
         $ canned_turns += 1
     return

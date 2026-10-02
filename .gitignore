@@ -32,3 +32,6 @@ art/out/
 art/_draft/
 art/_*.png
 art/__pycache__/
+
+# exploratory scratch scripts
+art/_*.py

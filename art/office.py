@@ -20,7 +20,7 @@ from lib import box, cylinder, light, material as M  # noqa: E402
 args = lib.script_args()
 fast = "--fast" in args
 out = args[args.index("--out") + 1] if "--out" in args else os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "out", "bg_office.png")
+    os.path.dirname(os.path.abspath(__file__)), "out", "bg_office_stylised.png")
 
 rnd = random.Random(11)
 lib.reset()

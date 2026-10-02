@@ -186,7 +186,7 @@ def light_and_render(name):
     w, h, samples = (525, 700, 40) if fast else (1050, 1400, 128)
     lib.setup_render(w, h, samples, transparent=True, exposure=0.15)
     os.makedirs(out_dir, exist_ok=True)
-    lib.render(os.path.join(out_dir, "elena_%s%s.png" % (name, "_fast" if fast else "")))
+    lib.render(os.path.join(out_dir, "elena_stylised_%s%s.png" % (name, "_fast" if fast else "")))
 
 
 for name in (POSES if which == "all" else [which]):

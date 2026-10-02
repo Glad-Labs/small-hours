@@ -5,8 +5,9 @@ cloud API and no player-supplied key. The prototype is a one-room interrogation:
 suspect, Elena Voss, in free text, and a bundled `llama.cpp` server voices her answers.
 
 Status: working prototype. It passes its automated tests headless and has been played through in a
-browser, but nobody has played it on a phone or in a desktop window yet. The art (a night-time archive
-office and three poses of the suspect) is stylised 3D, generated from Blender scripts in `art/`.
+browser, but nobody has played it on a phone or in a desktop window yet. The art is realistic 3D rendered in
+Blender from CC0 assets: scanned props and materials from Poly Haven for the archive office, and an MPFB
+(MakeHuman) character for the suspect, all built by scripts in `art/`.
 
 ## The design in one paragraph
 
@@ -23,7 +24,7 @@ cached so Ren'Py rollback replays are identical, and a crashed model server is r
 |---|---|
 | `orchard-street/` | The Ren'Py project. `game/ai_suspect.py` is the model layer; `game/script.rpy` is the story. |
 | `orchard-street/ai/` | Where the `llama-server` binary and GGUF model go. See `ai/README.md`. |
-| `art/` | Blender scripts that build and render the background and the character, plus the WebP conversion. See `art/README.md`. |
+| `art/` | Blender scripts that build and render the background and the character, fetch the shared asset library and convert to WebP. See `art/README.md`. |
 | `orchard-street/tools/serve_web.py` | Serves the browser build and the model to a phone over Tailscale. |
 | `orchard-street/tests/` | Module tests, a messy-input play-test and saved play-test runs. |
 | `bakeoff/` | The model comparison that picked the candidates (CPU only, 4 threads) and its raw results. |
