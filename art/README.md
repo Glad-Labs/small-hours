@@ -66,6 +66,18 @@ After changing art, rebuild the browser package too, or the phone keeps the old 
   head tilt, and ARKit-style face weights (`browInnerUp`, `eyeBlinkLeft`, `mouthFrownRight`...). Adding an expression is
   adding an entry plus an `image elena <name>` line in `script.rpy`.
 
+## Changing Elena's look
+
+- **Hair:** `art/build.sh --hair long01` is not wired through; run the script directly:
+  `blender -b --factory-startup --python /abs/path/art/elena_real.py -- --hair long01` (also `bob02`, `short02`, ...;
+  see `ls /store/asset-library/mpfb/data/hair`). It is tinted dark brown in the script.
+- **Skin and makeup:** the skin is `toigo_light_skin_female_bronze_with_makeup` (CC0). Other skins are in
+  `mpfb/data/skins`; the `*_with_makeup` ones are warmer and more finished than the bare skins.
+- **Face:** `FACE_DETAILS` in `elena_real.py` nudges MakeHuman's face sliders (eye height, lips, cheekbones, chin,
+  head shape). Every slider is a file in the add-on's `data/targets/`; add an entry to try another.
+- A tweak test is cheap: it showed that makeup skin plus those slider changes make the stock face noticeably softer
+  and more feminine, and loose hair that frames the face is more flattering than a tight ponytail.
+
 ## MPFB gotchas (learned the hard way)
 
 - Create the human with `detailed_helpers=True`. The rig is fitted from the joint helper vertices; without them the

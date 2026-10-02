@@ -22,6 +22,7 @@ import mpfb_helpers as mh  # noqa: E402
 args = lib.script_args()
 fast = "--fast" in args
 which = args[args.index("--pose") + 1] if "--pose" in args else "all"
+HAIR = args[args.index("--hair") + 1] if "--hair" in args else "ponytail01"      # ponytail01, long01, bob02, ...
 out_dir = args[args.index("--out-dir") + 1] if "--out-dir" in args else os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 
 # Each pose: where the elbows and wrists go (character's own left arm = viewer's right, bones ".L"),
@@ -66,22 +67,32 @@ def aim(rig, bone_name, target):
     bpy.context.view_layer.update()
 
 
+# Face adjustments that make the stock MakeHuman face softer and more feminine: larger, lifted eyes, fuller lips,
+# higher cheekbones and a slimmer chin (values 0..1; "l-"/"r-" prefixes are the two sides).
+_both = lambda name, v: {"l-" + name: v, "r-" + name: v}
+FACE_DETAILS = {**_both("eye-height1-incr", 0.35), **_both("eye-height2-incr", 0.25), **_both("eye-bag-decr", 0.3),
+                **_both("eye-eyefold-angle-up", 0.2), "mouth-lowerlip-height-incr": 0.35, "mouth-upperlip-height-incr": 0.25,
+                "mouth-cupidsbow-incr": 0.3, "mouth-angles-up": 0.15, **_both("cheek-bones-incr", 0.4),
+                "chin-width-decr": 0.3, "chin-height-decr": 0.15, "head-oval": 0.35, "nose-width1-decr": 0.25}
+
+
 def build(pose):
     lib.reset()
     svc = mh.enable()
     human_svc, _target_svc, face_svc, _rig_svc = svc
-    base = mh.create_woman(svc)
-    mh.set_skin(svc, base, "middleage_caucasian_female")
+    base = mh.create_woman(svc, age=0.58)
+    svc[1].bulk_load_targets(base, [{"target": t, "value": v} for t, v in FACE_DETAILS.items()])   # before the assets, so they fit the new face
+    mh.set_skin(svc, base, "toigo_light_skin_female_bronze_with_makeup")
     rig = human_svc.add_builtin_rig(base, "default")           # the rig first, so every asset fitted next is rigged
     mh.add(svc, base, "eyes/high-poly/high-poly", "Eyes")
     mh.add(svc, base, "eyebrows/eyebrow004/eyebrow004", "Eyebrows")
     mh.add(svc, base, "eyelashes/eyelashes02/eyelashes02", "Eyelashes")
     mh.add(svc, base, "teeth/teeth_base/teeth_base", "Teeth")
-    mh.add(svc, base, "hair/ponytail01/ponytail01", "Hair")
+    mh.add(svc, base, "hair/%s/%s" % (HAIR, HAIR), "Hair")
     mh.add(svc, base, "clothes/female_elegantsuit01/female_elegantsuit01", "Clothes")
     mh.add(svc, base, "clothes/spamrakuen_sagerfrogs_glasses_01/spamrakuen_sagerfrogs_glasses_01", "Clothes")
     for o in mh.assets(base):
-        if "ponytail" in o.name:
+        if o.name == base.name + "." + HAIR:
             mh.tint_object(o, "#2a1810")           # blonde-to-dark-brown hair
         elif "glasses" in o.name:
             mh.tint_object(o, "#2b1f14")           # dark tortoise frames instead of the red ones
@@ -114,7 +125,7 @@ def build(pose):
 
 def light_and_render(name):
     lib.world_gradient("#222a42", "#141a2c", strength=0.55)
-    lib.light("key", "AREA", (-1.4, -1.7, 1.9), 190, "#ffcf9a", size=1.2, target=(0, 0, 1.4))
+    lib.light("key", "AREA", (-1.6, -2.0, 1.9), 260, "#ffd9b0", size=2.2, target=(0, 0, 1.4))      # large, warm, soft
     lib.light("rim", "AREA", (1.6, 1.3, 2.1), 330, "#7f9cff", size=0.9, target=(0, 0, 1.5))
     lib.light("fill", "AREA", (1.4, -2.0, 1.3), 55, "#a9b8ff", size=2.0, target=(0, 0, 1.3))
     lib.light("top", "AREA", (0, -1.2, 3.0), 45, "#ffffff", size=2.0, target=(0, 0, 1.3))
