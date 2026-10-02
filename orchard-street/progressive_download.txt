@@ -1,0 +1,12 @@
+# RenPyWeb progressive download rules - first match applies
+# '+' = progressive download, '-' = keep in game.zip (default)
+# See https://www.renpy.org/doc/html/build.html#classifying-and-ignoring-files for matching
+#
+# +/- type path
+# Our art is small (about 200 KB in total), so ship it inside game.zip; downloading it on demand
+# made the background and Elena pop in late on a phone.
+- image game/images/**
+- image game/gui/**
++ image game/**
++ music game/audio/**
++ voice game/voice/**

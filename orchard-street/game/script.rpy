@@ -23,11 +23,10 @@ init python:
         else:
             renpy.quit()
 
-    def placeholder(label, color):
-        """Flat-colour stand-in for character art."""
-        return Fixed(Solid(color, xysize=(300, 460)),
-                     Text(label, size=26, xalign=0.5, yalign=0.5, text_align=0.5, color="#ffffff"),
-                     xysize=(300, 460))
+    def pose(mood):
+        """Show Elena in a pose, with a short dissolve so the change reads as an expression shift."""
+        renpy.show("elena " + mood, at_list=[stage])
+        renpy.with_statement(Dissolve(0.3))
 
     def ai_status_text():
         if REMOTE:
@@ -52,16 +51,17 @@ init python:
 define det = Character("Detective", who_color="#9fc5ff")
 define elena = Character("Elena Voss", who_color="#f2c48d")
 
-image bg office = Fixed(Solid("#1d2230"),
-                        Text("ARCHIVE OFFICE  -  Orchard Street Gallery", size=22, color="#4a5470",
-                             xalign=0.5, ypos=30))
-image elena guarded = placeholder("ELENA VOSS\n(guarded)", "#5b7fa3")
-image elena tense = placeholder("ELENA VOSS\n(tense)", "#a38a5b")
-image elena broken = placeholder("ELENA VOSS\n(broken)", "#a35b66")
+## Art is rendered from 3D scenes in Blender (see art/README.md) larger than it is shown, so it stays
+## sharp on big screens and phones; zoom brings it back to the 1280x720 layout. The background is
+## 1920x1080 (zoom 2/3) and the sprites are 1050x1400 (zoom 1/2, shown at 525x700).
+image bg office = Transform("images/bg_office.webp", zoom=2.0 / 3.0)
+image elena guarded = Transform("images/elena_guarded.webp", zoom=0.5)
+image elena tense = Transform("images/elena_tense.webp", zoom=0.5)
+image elena broken = Transform("images/elena_broken.webp", zoom=0.5)
 
 transform stage:
     xalign 0.75
-    ypos 50
+    ypos 20
 
 ## Game state. Everything the model needs to know comes from here, never from the model.
 default found_badge_log = False
@@ -174,7 +174,7 @@ label elena_answers(question):
         $ admitted_vault = True
         $ elena_mood = "tense"
 
-    $ renpy.show("elena " + elena_mood, at_list=[stage])
+    $ pose(elena_mood)
     elena "[elena_line!q]"
 
     $ history.append((question, elena_line))
@@ -189,7 +189,7 @@ label elena_answers(question):
 
 ## Authored, not generated: the climax is too important to leave to a small model.
 label confession:
-    $ renpy.show("elena broken", at_list=[stage])
+    $ pose("broken")
 
     elena "..."
     elena "Stop. Please. That is enough."

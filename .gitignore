@@ -24,6 +24,11 @@ orchard-street/ai/serve.log
 
 # Logs and regenerated test output
 orchard-street/build/
-orchard-street/progressive_download.txt
 bakeoff/*.log
 orchard-street/tests/screenshots/
+
+# Blender art pipeline: raw renders and drafts (the game loads the WebP copies in game/images)
+art/out/
+art/_draft/
+art/_*.png
+art/__pycache__/

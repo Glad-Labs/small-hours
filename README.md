@@ -4,8 +4,9 @@ An experiment in putting a small local language model inside a Ren'Py visual nov
 cloud API and no player-supplied key. The prototype is a one-room interrogation: you question a
 suspect, Elena Voss, in free text, and a bundled `llama.cpp` server voices her answers.
 
-Status: working prototype. It passes its automated tests headless, but nobody has played it in a
-real window yet, and the art is flat-colour placeholders.
+Status: working prototype. It passes its automated tests headless and has been played through in a
+browser, but nobody has played it on a phone or in a desktop window yet. The art (a night-time archive
+office and three poses of the suspect) is stylised 3D, generated from Blender scripts in `art/`.
 
 ## The design in one paragraph
 
@@ -22,6 +23,7 @@ cached so Ren'Py rollback replays are identical, and a crashed model server is r
 |---|---|
 | `orchard-street/` | The Ren'Py project. `game/ai_suspect.py` is the model layer; `game/script.rpy` is the story. |
 | `orchard-street/ai/` | Where the `llama-server` binary and GGUF model go. See `ai/README.md`. |
+| `art/` | Blender scripts that build and render the background and the character, plus the WebP conversion. See `art/README.md`. |
 | `orchard-street/tools/serve_web.py` | Serves the browser build and the model to a phone over Tailscale. |
 | `orchard-street/tests/` | Module tests, a messy-input play-test and saved play-test runs. |
 | `bakeoff/` | The model comparison that picked the candidates (CPU only, 4 threads) and its raw results. |
