@@ -1,169 +1,204 @@
-# Ten Forty-One: story bible (draft 1)
+# Ten Forty-One: story bible (draft 2)
 
-Episode one of the series. Written against `FORMULA.md`. Names, genders and ages are placeholders and are easy to change.
-The proof chain was checked by hand only; the case checker in `DESIGN.md` does not exist yet and may find holes.
+Episode one. Written against `FORMULA.md` and the scope rules in `DESIGN.md`. Draft 2 is a cut-down rewrite of draft 1: fewer suspects, fewer clues, three twists instead of five,
+one romance, and a deduction sheet in place of a courtroom scene. Names, genders and ages are placeholders and easy to change.
 
-## One-paragraph pitch
+## Pitch
 
-A storm night at the Harrow Gallery, a converted customs house at the end of a single lift bridge. The detective was invited to a private
-auction to quietly look into "irregularities". At 10:48 pm a body is found in the bolted vault, wearing the owner's coat, and every clock
-in the house reads 10:41. By dawn the bridge will be down and the sheriff will arrive; until then the detective is the only law on the
-headland, and whatever they sign at dawn becomes the official record.
+A storm night at the Harrow Gallery, a converted customs house at the end of a single lift bridge. You were invited to a private auction to look quietly into "irregularities".
+At 10:48 pm a body is found in the bolted vault, wearing the owner's coat, and every clock in the house reads 10:41. Nearly everyone was in the auction room at 10:41. The two who were not, the owner (who has vanished) and the caretaker,
+are far too big to fit through the only other way into the vault.
 
-## Why a detective was invited, and why a storm
+## The one idea the game is built on
 
-The killer, Marcus Webb, needed a **respected witness whose account nobody would challenge**, because the small county force defers to a
-licensed investigator who was on the scene. He did not control the weather. He read the forecast, got the auction moved to the storm night
-three days ahead, and made the isolation certain by hand: the bridge pump fuse, the phone line and, later, the generator. The storm
-supplied cover and erased outdoor traces. The invitation, on gallery letterhead and signed by Harrow, went out through Webb's own auction
-house's courier account. That docket is the slip in an otherwise careful plan.
+Under the official time of 10:41, the crime is **impossible**: every slim person was visibly in the hall, and the two people without alibis cannot fit through the duct.
+So the player has to conclude that **the time is wrong**, and then work out who made it wrong. The wrong time is not only in the world; it is in the player's own notebook (below).
+Every other twist hangs off this one.
+
+## Why a detective, and why a storm
+
+Marcus Webb wanted the **first outsider on the scene to write down 10:41** before the sheriff arrives, so that every statement and the final report anchor on it.
+You are that outsider: licensed, reputable, and known for closing cases fast. He did not control the weather. He read the forecast, got the auction moved to the storm night three days ahead,
+and made the isolation certain by hand (the bridge pump fuse, the phone line, and later the generator). The storm gave cover and washed away outdoor traces.
+Your invitation, on gallery letterhead and signed "Harrow", went out on Webb's own auction house's courier account. That docket is the slip in an otherwise careful plan.
 
 ## Tone
 
-Tense, but a thriller that lets you breathe. The model for the mix is *Knives Out* and *The Thin Man*: dry wit under pressure, and people you want to spend time with.
-
-- **Humor.** Every speaking character has a comic register (see the cast). Rule: a light beat within every three scenes, and never during a death reveal.
-  Running gags: the stopped clocks ("time of death? pick a clock"), the bid paddle numbers, Harrow's antique generator, the sculpture *Untitled (Chair)*.
-- **Romance.** Two optional slow burns, so the detective can be written gender-open. Both cost clock minutes, so love is a trade-off with investigating.
-  Neither is needed to win. Both pay off in the ending choice.
-- **Warmth.** A recurring sidekick (Pip) and, in later episodes, a home base. The charming killer flirts with everyone; that is a performance, not an option.
+Tense, but a thriller that lets you breathe: *Knives Out* and *The Thin Man*, dry wit under pressure and people you want to spend time with.
+Every speaking character has a comic register. A light beat within every three scenes, never during a death reveal. Running gags: the stopped clocks ("time of death? pick a clock"),
+Harrow's antique generator, the sculpture *Untitled (Chair)*, Webb's ivory gavel that "has sold three Constables and a ghost".
 
 ## Cast
 
-Six suspects, the detective, a sidekick and the dead man. Eight people at the gallery that night, counting him.
+Four people are voiced by the model (**AI**): they are where free-text questioning matters. The rest are scripted, because every model-voiced person costs prompt tuning, a guard and a playtest.
 
-| Who | Role | Want | Tells the detective first | The lie | The secret (unrelated to the crime) | What they saw | Comic register |
+| Who | Role | Voice | Build | Tells you first | The lie | The secret (unrelated to the crime) | Comic register |
 |---|---|---|---|---|---|---|---|
-| **The Detective** | the player (name and gender open) | to do the job properly | | | their reputation for closing cases fast is why they were invited | | dry inner voice |
-| **Marcus Webb**, 51 | auctioneer, Aldous & Pryce. Silver-grey waistcoat, grandfather's ivory-handled gavel. **The killer.** | the case closed by dawn | "In the green room, then on the rostrum. Terrible business." | "I was in the green room the whole interval" (21:08 to 21:40) | the forgery ring, and he is its fence | | auctioneer's patter, gently sinister ("going once") |
-| **Edmund Harrow**, 66 | owner. **Second victim.** | keep the gallery | "I wrote you no letter." (only in the prologue) | "I met Julian tonight for the first time" | broke; has sold forgeries; was writing a confession | | theatrical self-pity |
-| **Julian Crane**, 41 | authenticator. **First victim** | to refuse to certify | (dead) | | | | |
-| **Nell Ashby**, 34 | registrar. **The ally, and romance option A** | to protect Edmund and herself | helpful, brisk, hands over the master key | "There is no other way into the vault." "I haven't seen the ledger since Tuesday." | **she painted the Calder late works**, left-handed, for three years | | wry, understated |
-| **Dom Harrow-Bell**, 29 | Harrow's nephew and heir. **Romance option B** | to save the gallery | flippant | "I was on the terrace all interval" | read his uncle's email to find out if it was being sold | overheard "You said Saturday, Marcus" at 18:40 | sarcasm, sparring |
-| **Dr. Tomás Ibarra**, 58 | physician and collector | to leave | "On the terrace. Saw nothing." | "I wasn't on the phone" | owes money to a lender, "R." | saw **Webb come up the service stairs at about 21:37, dusty, brushing his waistcoat** | bedside-manner jokes |
-| **Oren Pike**, 63 | caretaker and guard | to protect Harrow and his post | "Mr. Harrow never left his study. I'd stake my life." | "The cellar is always locked" | left the cellar door unlocked that evening "for the wine crates", at Webb's request | heard Harrow and Crane argue at 19:20 | deadpan |
-| **Pip**, 23 (optional) | the detective's assistant, stuck here too | to impress | eager | | | | enthusiasm, snacks |
+| **The Detective** | you; name and gender open | | | | | your reputation for fast closes is why you were invited | dry inner voice |
+| **Marcus Webb**, 51 | auctioneer, Aldous & Pryce. **The killer.** Silver-grey waistcoat, ivory-handled gavel | **AI** | lean | "I make it ten forty-one on the nose. Write that down, my dear." | "I was in the green room the whole interval (21:08 to 21:40)" | he fences the forgeries | patter, gently sinister |
+| **Nell Ashby**, 34 | registrar. **The ally and the romance.** Left-handed, ink on her fingers | **AI** | slim | helpful and brisk; hands you the master key | "There is no other way into the vault." "I haven't seen the ledger since Tuesday." | **she painted the Calder late works**, for three years | wry, understated |
+| **Dr. Tomás Ibarra**, 58 | collector and physician | **AI** | heavy | "On the terrace. I saw nothing." | "I wasn't on the phone" | owes money to a lender | bedside-manner jokes |
+| **Dom Harrow-Bell**, 29 | Harrow's nephew and heir | **AI** | slim | flippant | "I was on the terrace all interval" | he was reading his uncle's email to see if the gallery was being sold | sarcasm, sparring |
+| **Oren Pike**, 63 | caretaker | scripted | heavy | "Mr. Harrow never left his study. I'd stake my life." | "The cellar is always locked" | left the cellar open "for the wine crates", at Webb's request | deadpan |
+| **Edmund Harrow**, 66 | owner. **Second victim** | scripted | stout | "I wrote you no letter." (prologue only) | "I met Julian tonight for the first time" | broke; has sold forgeries; was writing a confession | theatrical self-pity |
+| **Julian Crane**, 41 | authenticator. **First victim** | dead | | | | | |
 
-## What really happened (the truth timeline)
+## What really happened
 
 | When | What |
 |---|---|
-| three days before | the forecast is issued; Webb asks Harrow to move the auction from Saturday to Thursday; the invitation leaves by Aldous & Pryce courier |
-| Wednesday night | Webb, in setting up, removes the bridge pump fuse and cuts the phone line at the garden box |
-| 18:00 | the detective arrives; the storm is starting |
-| 18:40 | Dom overhears Harrow tell Webb "You said Saturday, Marcus" |
-| 19:20 | Crane tells Harrow he will not certify (his notebook: the strokes are left-handed; Calder was right-handed); Pike overhears |
+| three days before | the forecast is issued; Webb gets Harrow to move the auction from Saturday to Thursday; your invitation leaves on Aldous & Pryce's courier account |
+| Wednesday night | Webb removes the bridge pump fuse and cuts the phone line at the garden box |
+| 18:40 | Dom overhears Harrow say "You said Saturday, Marcus" |
+| 19:20 | Crane tells Harrow he will not certify; his notebook says the late works are painted left-handed and Calder was right-handed. Pike overhears the argument |
 | 20:00 | Pike leaves the cellar door unlocked at Webb's request |
 | 20:15 | Harrow lends Crane his coat; the vault is cold |
-| 20:30 | the auction opens; Webb on the rostrum |
-| 21:00 | interval. Harrow to the study, alone. Dom to the office, reading email. Ibarra to the terrace, on the phone. Nell cataloguing alone. Webb to the "green room" |
-| 21:12 | Webb, in the cellar, sets a timer in the fuse cupboard: power off 22:41, on 22:42. He enters the vault through the duct |
+| 20:30 to 21:00 | first lots. Webb on the rostrum with the ivory gavel |
+| 21:00 | interval. Harrow to the study, alone. Dom to the office, reading email. Ibarra to the terrace, on the phone (21:19 to 21:36). Nell cataloguing alone. Webb to the "green room" |
+| 21:12 | Webb, in the cellar, sets a timer in the fuse cupboard: power off 22:41, on 22:42 |
 | 21:14 | Crane, alone in the vault, throws the bolt himself for privacy |
-| about 21:31 | Webb kills Crane with the gavel, sets his watch to 22:41 and smashes the crystal with the crown pulled out, and leaves by the duct, snagging a silver thread |
-| about 21:37 | Ibarra sees him on the service stairs. 21:40: Webb is back on the rostrum |
-| 22:41 | the timer cuts the power for a minute; every clock on that circuit stops. Webb is on the rostrum in front of everyone |
-| 22:44 | Pike goes to fetch the headline lot, finds the vault bolted, uses the emergency override, shouts "Mr. Harrow's dead!" |
-| 22:48 | **the game begins.** Harrow, who left for the study at 22:35, hears this, understands the coat was meant for him, and hides in the boathouse |
-| 23:25 | Webb closes the generator fuel valve; 23:30 the lights fail |
-| 00:15 to 01:05 | Webb volunteers to "check the generator". At about 00:35 he finds Harrow in the boathouse and kills him, then places him on the cliff steps |
+| about 21:24 | Webb crawls from the cellar through the duct into the vault, leaving the vault-side grille off |
+| about 21:31 | he kills Crane with the gavel, sets the wristwatch to 22:41 and smashes the crystal with the crown pulled out |
+| 21:34 | he leaves by the duct, snagging a silver thread on the cellar-side grille |
+| about 21:37 | Ibarra, on the terrace, sees him come up the service stairs, dusty and brushing his waistcoat |
+| 21:40 | Webb is back on the rostrum with a plain house gavel. The ivory one is in a rag in the cellar bin |
+| 22:35 | Harrow leaves the hall for the study. Pike goes for the vault key |
+| 22:41 | the timer cuts the power for a minute and every clock on that circuit stops. Webb is on the rostrum in front of the room |
+| 22:44 | Pike finds the vault bolted, uses the emergency override, sees the coat, and shouts "Mr. Harrow's dead!" |
+| 22:48 | **the game begins.** Harrow hears this, understands that his coat was meant to be taken for him, trusts no one, and hides in the boathouse |
+| 23:25 | Webb closes the generator fuel valve. 23:30 the lights fail |
+| 00:15 to 01:05 | Webb volunteers to "check the generator". At about 00:35 he finds Harrow in the boathouse and strikes him with the gavel, then places him on the cliff steps |
 | 01:15 | Pike finds Harrow's body |
-| 02:40 | Webb slips out to the bridge house to remove the fuse and splice the phone line so it looks like storm damage |
 
-## The clue map
+## The notebook and the deduction sheet
 
-Cost is game minutes. **P1 to P4** are the four links of the proof; each has at least two alternatives, so one missed clue never makes the case unsolvable.
+**The notebook** is the main screen after the map. It logs every statement with who said it and when, shows a list of **working assumptions** with their sources, and records who leaves the hall and when (if you are in it).
+It always shows what you still need to know, so you are never facing a blank box.
+At 22:48 it fills in one assumption by itself: **"Time of death: 22:41 (hall clock, Crane's watch, Pike, Webb)."** You can challenge any assumption by presenting evidence; a correct challenge strikes it through.
+That is the personal twist: you were carrying the killer's lie, and the game lets you find it out yourself.
 
-| Id | Where | Cost | What it shows | Link |
+**The deduction sheet** is the end of the game, in the style of *The Case of the Golden Idol*: four sentences with blanks, each filled from a list and backed by evidence you hold.
+Wrong blanks say only "this does not hold". Every sentence has at least two evidence routes, so one missed clue never makes the case unsolvable.
+
+1. Julian Crane died at **[21:31]**, not 22:41. Evidence: the chart **or** the phone.
+2. The time was set by **[a timer in the cellar]** and **[a watch changed by hand]**. Evidence: the timer **or** the watch.
+3. The killer came through **[the duct]** and was **[Marcus Webb]**. Evidence: the thread and the waistcoat, **or** the gavel, **or** Ibarra's sighting.
+4. **[Marcus Webb]** arranged the night: he **[moved the date]** and **[sent your invitation]**. Evidence: the courier docket **or** Dom's email thread.
+
+## Clues
+
+About 15, in six places. Cost is game minutes. Travel from the Great Hall: Vault 2, Cellar 3 (service stairs), Study 1, Registrar's office 1, Boathouse 8 (from 01:15).
+
+| Id | Where | Cost | What it shows | Used for |
 |---|---|---|---|---|
-| V1 | Vault | free | the body is Crane, not Harrow; Harrow's coat; in the pocket a notebook: "strokes left-handed. Do not certify" | twist 1, points at Nell |
-| V2 | Vault | 5 | Crane's watch: stopped 22:41, but crystal smashed with **the crown pulled out**: set by hand | P2 |
-| V3 | Vault | 10 | the paper **hygrothermograph chart** (spring-driven, not on mains): the humidity from a living person ends at **21:31** | P1 |
-| V4 | Vault | 5 | the duct grille, screws out. Nell said "no other way in" | the route; narrows to Webb, Nell, Dom |
-| V5 | Vault | 3 | the bolt was thrown **from inside** | the locked room |
-| V6 | Vault | 5 | Crane's phone: his wife's text read 21:26, her next at 21:45 unread | P1 (alt) |
-| B1 | Cellar | 10 | duct exit, fresh scuffs, **a silver-grey wool thread** | P3 (with the waistcoat) |
-| B2 | Cellar | 10 | **digital timer** in the fuse cupboard: off 22:41, on 22:42 | P2 |
-| B3 | Cellar | 10 | **the ivory gavel**, wrapped in a rag in the bin (Webb has been using a plain house one since 21:40) | P3 (alt) |
-| B4 | Cellar | 2 | the door was unlocked | Pike's ladder |
-| S1 | Study | 10 | half-burnt letter: forgeries sold through Aldous & Pryce | motive; false solution 1 |
-| S2 | Study | 5 | Harrow's diary: "W. says Thursday. Why Thursday?" | P4 (alt) |
+| V1 | Vault | free | the body is Crane, not Harrow; Harrow's coat; a flat round blow to the back of the head; in the coat a notebook: "strokes left-handed. Do not certify" | twist 1; points at Nell |
+| V2 | Vault | 5 | the watch: stopped 22:41, crystal smashed, **the crown pulled out**: set by hand | sheet 2 |
+| V3 | Vault | 10 | the paper **hygrothermograph chart** (spring-driven, not on mains): the trace left by a living person ends at **21:31** | sheet 1 |
+| V4 | Vault | 5 | the door is bolted from inside; the duct grille is off its screws and leaning against the wall | the locked room; only the slim fit |
+| V5 | Vault | 5 | Crane's phone: his wife's text read at 21:26, her next at 21:45 unread | sheet 1 |
+| B1 | Cellar | 10 | the cellar-side grille: fresh scuffs and **a silver-grey wool thread** | sheet 3 (with the prologue waistcoat) |
+| B2 | Cellar | 10 | a digital timer in the fuse cupboard: off 22:41, on 22:42 | sheet 2 |
+| B3 | Cellar | 10 | **the ivory gavel** in a rag in the bin | sheet 3 (the prologue shows a plain one later) |
+| S1 | Study | 10 | a half-burnt letter: forgeries sold through Aldous & Pryce | motive; false solution 1 |
 | R1 | Registrar's office | 5 | the empty ledger shelf | Nell's lie |
-| T1 | Terrace | 5 | cigarette ends; Ibarra's phone log (needs a promise or evidence) | Ibarra's ladder |
-| H1 | Boathouse steps (from 01:15) | 10 | Harrow's shoes are **clean and dry-soled on a mud path**: he was carried | twist 3 |
-| G1 | Bridge house | 20 | the pump fuse is out; the lock is not storm damage | P4 (alt), twist 4 |
-| G2 | Garden wall | 5 | the phone line is cut cleanly | twist 4 |
-| I1 | the detective's own invitation | 2 | **the courier docket is Aldous & Pryce's account, not the gallery's** | P4 |
-| TI | Ibarra | | saw Webb on the service stairs at about 21:37, dusty | P3 (alt) |
-| TD | Dom | | the Saturday remark and the email thread | P4 (alt) |
-| TP | Pike | | the cellar door was left open at Webb's request; the 19:20 argument | P3 (alt), false solution 1 |
-| TN | Nell | | the ledger: three years of Aldous & Pryce commissions, and a last page headed **THE LIBRARIAN** | motive; the thread |
+| H1 | Boathouse steps | 10 | Harrow: a flat round blow to the back of the head, the same as Crane's; the steps are rough stone, so a fall would tear, not dent; no weapon | twist 2: not a fall, not a flight |
+| I1 | your own invitation | 2 | **the courier docket is Aldous & Pryce's account, not the gallery's** | sheet 4 |
+| TI | Ibarra | | saw Webb on the service stairs at about 21:37, dusty | sheet 3 |
+| TD | Dom | | the email thread (Webb pushed for Thursday on the day of the forecast), and his own alibi | sheet 4 |
+| TN | Nell | | the ledger: three years of commissions, and a last page headed **THE LIBRARIAN** | motive; the series thread |
 
-**The accusation scene** (Ace Attorney style) asks for one clue per link. The right four prove it. The two-clue clicks that make the deductions feel earned:
-V2 + B2 (the time was staged), V3 + V5 + V4 (the death was before the dark, via the duct), B1 + the waistcoat planted in the prologue (it was Webb), I1 + S2 or TD (he built the night).
+Scripted, not clues: Pike reports at 22:58 that the phone line was cut clean (not storm damage) and at 23:05 that the bridge pump fuse is out. The isolation is something you are told, not something you hunt for.
+
+### Who could have done it
+
+| Person | Build (the duct needs a slim one) | Gap at 21:26 to 21:45 | Cleared by |
+|---|---|---|---|
+| Harrow | stout | study, alone | too big for the duct |
+| Pike | heavy | on rounds | too big for the duct |
+| Ibarra | heavy | terrace, phone call 21:19 to 21:36 | too big for the duct, and his own phone log |
+| Dom | slim | office, alone | his laptop shows him typing at 21:31 (TD) |
+| Nell | slim | cataloguing, alone | the thread is silver-grey and she wore black; the sighting and the gavel are Webb's |
+| **Webb** | lean | "green room", alone | not cleared |
+
+At 22:41, by contrast, every slim person is in the hall in plain sight. That is the impossible crime.
 
 ## False solutions
 
-1. **Harrow did it.** Argument, his coat, vanished, burnt letter. Supported by S1, TP, V1.
-2. **Crane was killed in mistake for Harrow.** The coat. Points at Dom, who inherits. This is also what Harrow himself believes.
-3. **Nell did it.** The left-handed note, the duct she hid, the ledger lie. The most tempting after Harrow dies, and the one that costs the romance.
+1. **Harrow did it.** The argument (Pike), the coat, his vanishing, the burnt letter. It dies on the duct (he is too stout) and again on his own body.
+2. **Nell did it.** The left-handed notebook, the duct she hid, the ledger lie. The most tempting after Harrow dies, and the one that costs you the romance if you are wrong.
 
-## Twist ladder and chapters
+## Three twists and five chapters
+
+Twists: **(1) the time is staged**, **(2) your prime suspect is dead**, **(3) the helper who steered you lied, and the charming man who helped most is the killer.**
 
 | Chapter | Game time | The turn | Ends on | Music |
 |---|---|---|---|---|
-| Prologue: arrival (about 4 min, authored) | 18:00 to 22:41 | plants everything (see below) | the clocks stop | warm chamber jazz, murmur |
-| 1. The Wrong Body | 22:48 to 23:30 | the body is Crane. Harrow is gone. Every clock reads 10:41 | the lights fail | low drone, piano |
-| 2. Ten Forty-One | 23:30 to 01:15 | alibis at 22:41 are worthless; the time was staged; the vault was entered through the duct | Pike screams from the boathouse | storm and candlelight, pulse |
-| 3. The Prime Suspect | 01:15 to 02:40 | your prime suspect is dead. Suspicion swings to Nell | a figure crosses the yard to the bridge house | sparse cello |
-| 4. The Invitation | 02:40 to 04:30 | the trap was built for you: the docket, the date, the bridge | the ledger's last page: THE LIBRARIAN | the motifs return |
-| 5. Dawn | 04:30 to 06:00 | the accusation and the confession; the ally was steering you | the choice | full build, then quiet |
+| Prologue: arrival (about 4 min, authored) | 18:00 to 22:41 | plants everything (below) | the clocks stop | warm chamber jazz, murmur |
+| 1. The Wrong Body | 22:48 to 23:30 | the body is Crane; the notebook fills in 22:41; the crime is impossible | the lights fail | low drone, piano |
+| 2. Ten Forty-One | 23:30 to 01:15 | you attack the time and win: chart, watch, duct, timer. A shared candle with Nell | Pike calls from the boathouse | storm and candlelight |
+| 3. The Prime Suspect | 01:15 to 02:40 | Harrow is dead. Suspicion swings to Nell. Interviews with Dom and Ibarra | Nell slips out of the hall | sparse cello |
+| 4. The Fireplace | 02:40 to 04:30 | follow her: the forgeries, the ledger, THE LIBRARIAN; the ally's lie is explained | the sheet has one blank left | the motifs return |
+| 5. Dawn | 04:30 to 06:00 | the sheet, the confession, the choice | the choice | full build, then quiet |
 
-**Plants in the prologue** (so every twist is re-readable): Webb's silver-grey waistcoat, his lean wiry build (the duct admits only the slim) and grandfather's ivory gavel; Harrow lending Crane his coat; Nell handing over a programme with her left hand, ink on her fingers;
-Harrow's "I wrote you no letter" if you ask; Pike grumbling about the cellar left open "for the wine, whoever's idea that was"; Ibarra stepping onto the terrace to take a call; Dom's "funny, they moved the date".
+**Plants in the prologue**, so every twist is re-readable: Webb's silver-grey waistcoat, lean build, love of exact times and ivory gavel; later, a plain wooden gavel on the rostrum. Harrow lends Crane his coat and says "I wrote you no letter" if you ask.
+Nell hands you a programme with her left hand, ink on her fingers. Pike grumbles that the cellar is open "for the wine, whoever's idea that was". Ibarra steps onto the terrace to take a call. Dom says "funny, they moved the date".
+At 22:35 you notice who is in the room: everyone but Harrow and Pike.
 
 ## Clock events
 
-22:58 phones dead. 23:05 the bridge will not lower. 23:25 the generator is sabotaged (offscreen). **23:30 the lights fail**: from here only the hall is lit, and other rooms cost +5 minutes and some people will not go alone.
-00:15 Webb leaves "to check the generator" (visible if you are watching who leaves). 01:15 Harrow found. **02:15 Nell tries to burn the ledger** unless you have already talked to her: the ledger is lost if you wait.
-**02:40 a figure crosses the yard** (you only see it from a window, or if you were keeping watch): follow it and you catch Webb at the bridge house with the fuse. 05:45 dawn, the bridge is cleared. 06:00 the deadline to accuse. 06:15 the sheriff arrives.
-The costs are tuned by playtest; the target is about 45 actions and 30 to 60 real minutes.
+22:58 phones dead. 23:05 the bridge will not lower. **23:30 the lights fail**: only the hall is lit, other rooms cost +5 minutes, and Nell will not go to the cellar alone.
+00:15 Webb leaves "to check the generator" (it appears in your notebook if you are in the hall). 01:15 Harrow found. **02:15 Nell slips out**; at **02:40 she burns the ledger** unless you have caught up with her, and then the ledger and THE LIBRARIAN are lost for the series.
+05:45 dawn, the bridge is cleared. 06:00 the deadline to sign a finding. 06:15 the sheriff arrives.
+Costs are tuned by playtest; the target is about 30 actions over 22:48 to 06:00 and 40 to 60 real minutes.
 
-## Romance, concretely
+## The four voiced interviews
 
-- **Nell** (slow burn): the programme and the ink (prologue); the shared candle in the dark hall, 20 minutes you could have spent elsewhere (chapter 2); she lies to you (chapter 3) and it stings; she tells you the truth (chapter 4); the ending choice is whether to protect her.
-- **Dom** (sparring): banter from the first scene; the dark corridor where you both realise you are being hunted (chapter 2); the vulnerability under the sarcasm when he admits he was trying to save the gallery; at dawn a dare and a coffee cup on the bridge.
-- State: `nell_trust` and `dom_trust` (0 to 5). Warmth is also a tool: a trusting suspect tells you more, so romance is mechanically useful and risky, which is what makes it more than flavour.
-- The model voices flirtation, so the guard gets a content ceiling (keep it PG-13) and the director note carries the current trust level.
+The model only voices; the code picks what may be admitted from the evidence you present. Each person has a ladder. The big reveals are authored.
+
+- **Webb.** L0: helpful, anchors 22:41, steers toward Harrow ("hate to say it"). L1 (sheet 1 evidence): concedes the time may be off, then points at Nell ("Ms Ashby knows this building's bones"). L2 (sheet 2 plus any sheet 3 evidence): cornered, he stalls and bargains ("your report is the only thing between this house and a great many ruined people"). **The confession is authored** and unlocks only when the sheet is complete.
+- **Nell.** L0: brisk and helpful, steers to Harrow, denies the duct and the ledger. L1 (R1, or V4, or trust 3): admits she knew the duct and took the ledger to protect Edmund. L2 (V1's left-handed note, or trust 4): "I painted them." Reward: the ledger.
+- **Ibarra.** L0: "terrace, saw nothing." L1: you promise to keep his phone call private (a real choice), or you press him on the call. L2: he saw Webb on the stairs.
+- **Dom.** L0: flippant, claims the terrace. L1: Ibarra says he was alone out there, or you show him S1. He admits snooping and shows the email thread and his laptop log. L2: why he did it (to save the gallery).
+
+## Romance, concretely (Nell)
+
+The ink on her fingers (prologue). A shared candle in the dark hall, 20 minutes you could have spent elsewhere (chapter 2). She lies to you and it stings (chapter 3). The fireplace, where she tells the truth (chapter 4). The ending choice is whether to protect her.
+State: `nell_trust` 0 to 5. A trusting suspect says more, so warmth is a tool; confronting her early on weak evidence costs trust. The model voices flirtation, so the guard gets a PG-13 ceiling and the director note carries the trust level.
+A second romance (Dom) is for a later episode.
 
 ## Endings and what carries over
 
-| Accusation | What happens | Carries into episode two |
+| How it ends | What happens | Carries into episode two |
 |---|---|---|
-| Harrow (dead) | **The Easy Verdict.** The case closes and Webb thanks you with a cheque | Webb is a **client** in episode two, and you know |
-| Nell | **Wrong Name.** She is arrested for fraud; Webb walks; the romance sours | the thread is cold |
-| Dom or another | **Wrong Name**, milder | |
-| Webb, fewer than four proofs | **Not Enough.** He is charged, makes bail, vanishes | he is loose |
-| Webb, all four | **Confession** (authored; "I needed a witness no jury would question"), then **the choice** | see below |
-| follow the 02:40 figure | **Caught in the Act**: shorter, less proof, same confession | the ledger is unresolved |
+| The sheet is complete | **The confession** (authored: "I needed a witness no jury would question"), then **the choice** | see below |
+| You sign Harrow | **The Easy Verdict.** The case closes and Webb thanks you with a cheque | Webb is your **client** in episode two, and you know |
+| You sign Nell | **Wrong Name.** She is arrested for fraud and Webb walks; the romance sours | the thread is cold |
+| You sign nothing | the sheriff arrives and Webb walks | |
 
-**The choice.** Sign a full report (Nell and the forgeries come out, eleven collectors are told, and the ring is warned) or a murders-only report (Nell walks and keeps painting, the ring goes quiet, you carry a lie).
-Ibarra's secret adds a smaller version: if you promised to keep his phone call private, do you? Flags: `webb_verdict`, `nell_fate`, `ibarra_promise`, `librarian_known`.
+**The choice.** Sign a full report (Nell and the forgeries come out, eleven collectors are told, the ring is warned) or a murders-only report (Nell walks and keeps painting, the ring goes quiet, you carry a lie).
+A smaller version for Ibarra: if you promised to keep his call private, do you? Flags: `nell_fate`, `ibarra_promise`, `librarian_known`, `webb_verdict`.
 
-## What the engine must support (feeds the roadmap)
+## Scope for episode one
 
-Timed events with conditions; a missable early window (Harrow's denial); gated testimony with promises and evidence as keys; **delegation** (send Pip to check a room: he takes the time, not you, and his report is unreliable and funny);
-a watch action; the accusation scene with four evidence slots; trust meters with a clock cost; carry-over flags; per-person humor register and content ceiling in the director note; audio cues from the case file (see `DESIGN.md`).
+| In | Out, for later |
+|---|---|
+| prologue and five chapters | a sidekick and delegation |
+| four voiced suspects, two scripted, one body | a second romance |
+| the notebook, the working assumptions and the deduction sheet | "killed in mistake for Harrow", "Caught in the Act", the bridge house, the terrace |
+| the clock and about ten events | generated cases and the skeleton library |
+| one romance (Nell), one trust meter | adaptive music stems and AI-generated music |
+| six places, about 15 clues | a second series |
+| about six found music tracks and 30 sound effects | |
+| about 20 sprites (four expressions for each voiced suspect) and six backgrounds, the hall with a lights-out variant | |
 
-## Art and sound needed
+## Open questions
 
-- **Places (8):** Great Hall, Vault with duct, Study, Registrar's office, Cellar with fuse cupboard, Terrace, Boathouse, Bridge house. The hall gets a lights-out variant, which is the same scene with the lights changed, so it is cheap.
-- **People:** 6 suspects, Pip and the dead man; four expressions each (calm, guarded, pressed, breaking), about 28 sprites. Faces take iteration: Elena needed several passes.
-- **Sound:** rain, thunder, wind, door, bolt, clock tick, gavel, footsteps, candle, UI; one leitmotif per suspect; a bed per chapter.
+1. Is the detective's name and gender left open?
+2. How dark should the Easy Verdict be: a cheque and a wink, or something harder?
+3. Is the forgery ring with THE LIBRARIAN the thread you want for the whole series?
+4. Are these the right four to voice with the model? My pick: Webb, Nell, Ibarra and Dom, with Pike and Harrow scripted.
 
-## Open questions for the author
+## Not yet verified
 
-1. Is the detective's gender and name left open, and is that how the two romance options should read?
-2. Are Nell (ally who steers you) and a charming killer the right two big reveals, or should the ally be innocent of lying to you?
-3. Keep Pip (delegation, humor) or cut him from episode one?
-4. How dark should the Easy Verdict be: a cheque and a wink, or a harder consequence?
-5. Is the forgery ring and THE LIBRARIAN a thread you want to follow for the whole series?
+The proof chain and the "who could have done it" table were checked by hand, not by the case checker, which does not exist yet.
+Pacing in real minutes is a guess until it is played. Whether the model holds four personas through their ladders without leaking or looping is the biggest open risk and needs a playtest, as Elena's did.
