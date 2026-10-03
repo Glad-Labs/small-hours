@@ -28,6 +28,7 @@ cached so Ren'Py rollback replays are identical, and a crashed model server is r
 | `orchard-street/tools/serve_web.py` | Serves the browser build and the model to a phone over Tailscale. |
 | `orchard-street/tests/` | Module tests, a messy-input play-test and saved play-test runs. |
 | `bakeoff/` | The model comparison that picked the candidates (CPU only, 4 threads) and its raw results. |
+| `docs/DESIGN.md` | Proposal for the reusable "casework" layer on top of Ren'Py: case files, fair-play checker, episodes and series. |
 
 ## Findings so far
 
