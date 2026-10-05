@@ -20,6 +20,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import sys
 import threading
 import time
 import urllib.error
@@ -69,7 +70,7 @@ compliments get returned with interest. Now and then you slip into auctioneer's 
 
 """ + _HOW + """
 
-WHAT YOU SAY FREELY (your story):
+WHAT YOU SAY FREELY (your story; always speak about yourself as "I"):
 - Every clock in the house stopped at 10:41 when the lights flickered, and so did poor Crane's watch. You are \
 certain that is when he died, and you think the detective should write it down.
 - At 10:41 you were on the rostrum selling lot nine, in front of the whole room.
@@ -104,7 +105,7 @@ Nobody told you anything about the vault that is not in your story.
 
 """ + _HOW + """
 
-WHAT YOU SAY FREELY (your story):
+WHAT YOU SAY FREELY (your story; always speak about yourself as "I"):
 - You have worked here six years. You are left-handed and there is ink on your fingers from the catalogue pens.
 - During the interval, from 9:00 to 9:40, you were alone in the registrar's office checking lot numbers.
 - At 10:41 you were at the catalogue desk in the hall when the lights flickered.
@@ -281,6 +282,8 @@ class VoiceAI:
             with open(cfg_path) as f:
                 self.cfg.update(json.load(f))
         self.cfg.update(overrides or {})
+        if self.cfg["threads"] == "auto":         # half the cores, within reason: the game itself needs some
+            self.cfg["threads"] = max(2, min(8, (os.cpu_count() or 4) // 2))
         self.state = "idle"
         self.error = ""
         self.proc = None
@@ -290,6 +293,7 @@ class VoiceAI:
         self._lock = threading.Lock()
         self._schema_style = "json_schema"
         self.gpu_layers_used = None
+        self.device = None
 
     @property
     def status(self):
@@ -315,7 +319,12 @@ class VoiceAI:
         """ONE long-lived thread owns llama-server: PR_SET_PDEATHSIG fires when the spawning thread exits."""
         restarts = 0
         gpu = self.cfg["gpu_layers"]
-        layers = [99, 0] if gpu == "auto" else [int(gpu)]
+        if gpu == "auto":
+            binary = self._binary()
+            self.device = model_store.pick_device(binary) if binary else None
+            layers = [99, 0] if self.device else [0]
+        else:
+            layers = [int(gpu)]
         while not self._stopping:
             try:
                 proc = self._spawn(layers[0])
@@ -343,6 +352,9 @@ class VoiceAI:
     def _path(self, p):
         return p if os.path.isabs(p) else os.path.join(self.dir, p)
 
+    def _binary(self):
+        return self._path(self.cfg["server_bin"]) if self.cfg["server_bin"] else model_store.server_binary(self.dir)
+
     def _model_path(self):
         if self.cfg["model"]:
             p = self._path(self.cfg["model"])
@@ -350,7 +362,7 @@ class VoiceAI:
         return model_store.find_model(self.dir)
 
     def _spawn(self, gpu_layers):
-        binary = self._path(self.cfg["server_bin"]) if self.cfg["server_bin"] else model_store.server_binary(self.dir)
+        binary = self._binary()
         model = self._model_path()
         if not binary or not os.path.exists(binary):
             raise FileNotFoundError("llama-server not found for %s" % model_store.platform_key())
@@ -360,10 +372,20 @@ class VoiceAI:
         cmd = [binary, "-m", model, "--host", "127.0.0.1", "--port", str(port),
                "-c", str(self.cfg["context"]), "-t", str(self.cfg["threads"]),
                "-ngl", str(gpu_layers), "-np", "1", "--reasoning", "off", "--no-webui"]
+        if gpu_layers and self.device:
+            cmd += ["--device", self.device, "--split-mode", "none"]
+        elif not gpu_layers:
+            cmd += ["--device", "none"]
         try:
             log = open(os.path.join(model_store.data_dir(), "llama-server.log"), "w")
         except OSError:
             log = subprocess.DEVNULL
+        if sys.platform == "darwin":
+            # A zip downloaded from the web marks every file inside as quarantined, and macOS then refuses to
+            # start an unsigned helper even after the player has opened the app. The files are the player's
+            # own, so lifting the mark on our server folder is allowed. Untested on a real Mac so far.
+            subprocess.run(["xattr", "-dr", "com.apple.quarantine", os.path.dirname(binary)],
+                           capture_output=True, timeout=30)
         kw = {}
         if os.name == "nt":
             kw["creationflags"] = subprocess.CREATE_NO_WINDOW

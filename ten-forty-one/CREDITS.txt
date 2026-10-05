@@ -1,0 +1,28 @@
+TEN FORTY-ONE: CREDITS AND LICENCES
+
+Voice model (downloaded on first run, not included in this package)
+  Gemma 4 E2B, instruction-tuned, QAT q4_0 GGUF, by Google.
+  https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf
+  Apache License 2.0.
+
+Model server (included, in ai/bin/)
+  llama.cpp by the ggml authors, release b11401. MIT License.
+  https://github.com/ggml-org/llama.cpp
+
+Game engine
+  Ren'Py, by Tom Rothamel and contributors. MIT License (with LGPL libraries).
+  https://www.renpy.org
+
+3D props, materials and lighting environments
+  Poly Haven, CC0. https://polyhaven.com
+
+Characters
+  Built with MPFB 2 (MakeHuman for Blender) from MakeHuman community assets.
+  Bodies, skins, hair, eyes, eyebrows and Marcus Webb's suit: CC0.
+  Nell Ashby's knitted sweater ("Knitted sweater 01") and trousers ("Female trousers 1") by Mindfront,
+  from the MakeHuman community asset packs shirts02 and pants02, licensed CC-BY.
+  https://static.makehumancommunity.org/assets/assetpacks/shirts02.html
+  https://static.makehumancommunity.org/assets/assetpacks/pants02.html
+
+Game code
+  Apache License 2.0.

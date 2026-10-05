@@ -1,1 +1,1 @@
-{"threads": 4, "temperature": 0.8}
+{"threads": "auto", "temperature": 0.8}

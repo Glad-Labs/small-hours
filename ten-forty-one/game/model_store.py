@@ -11,7 +11,9 @@ the data folder works too, so a "full" offline package can simply include it.
 import hashlib
 import os
 import platform
+import re
 import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -56,6 +58,43 @@ def server_binary(ai_dir):
         if os.path.exists(p):
             return p
     return shutil.which("llama-server")
+
+
+# Names of graphics devices that share system memory or emulate a GPU in software: slower than the CPU path for
+# this model, so they are never chosen even though they report lots of "free" memory.
+_INTEGRATED = re.compile(r"llvmpipe|swiftshader|lavapipe|ryzen|radeon\(tm\) graphics|radeon graphics|vega \d+ graphics|"
+                         r"intel\(r\) (uhd|hd|iris)|\bintel\b.*graphics|microsoft basic", re.I)
+_DEVICE_LINE = re.compile(r"^\s*(\w+\d+):\s*(.*?)\s*\((\d+) MiB,\s*(\d+) MiB free\)")
+NEEDS_MIB = 4200        # model weights plus room for the context
+
+
+def pick_device(binary):
+    """The one GPU to run on, as a llama.cpp device name (e.g. "Vulkan0", "MTL0"), or None for the CPU.
+
+    llama.cpp otherwise spreads layers over every device it finds, and on a laptop that pairs built-in and
+    dedicated graphics (or a PC with a busy second card) that is slower than using one good GPU."""
+    try:
+        out = subprocess.run([binary, "--list-devices"], capture_output=True, text=True, timeout=60,
+                             **_no_window()).stdout
+    except Exception:
+        return None
+    best = None
+    for line in out.splitlines():
+        m = _DEVICE_LINE.match(line)
+        if not m:
+            continue
+        name, label, total, free = m.group(1), m.group(2), int(m.group(3)), int(m.group(4))
+        if name.upper().startswith("MTL") or name.upper().startswith("METAL"):
+            return name                     # Apple Silicon: unified memory, always the right choice
+        if _INTEGRATED.search(label) or free < NEEDS_MIB:
+            continue
+        if best is None or free > best[1]:
+            best = (name, free)
+    return best[0] if best else None
+
+
+def _no_window():
+    return {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
 
 
 def find_model(ai_dir):

@@ -25,12 +25,38 @@ label main_menu:
 ## What goes into a distribution; first match wins. The model and the code holding the spoilers
 ## (voice_ai.py: personas, secrets) ship in desktop builds only; the browser asks the PC instead.
 init python:
+    build.name = "TenFortyOne"
+    build.directory_name = "TenFortyOne-" + config.version
+    build.executable_name = "TenFortyOne"
+
     build.classify("build/", None)
+    build.classify("dist/", None)
     build.classify("tests/", None)
     build.classify("tools/", None)
     build.classify("game/testcases.rpy", None)
     build.classify("game/testcases.rpyc", None)
     build.classify("**/__pycache__/", None)
-    build.classify("ai/**", "linux windows mac")
+
+    # The model server ships per platform; the 3.2 GB model is downloaded on first run (model_store.py), so
+    # neither the model nor the developer's links to it are ever packaged.
+    # Ren'Py classifies a folder before looking inside it, so each folder needs its own rule ahead of the
+    # catch-all at the end.
+    build.classify("ai/models/", None)
+    build.classify("ai/bin/llama-server", None)
+    build.classify("ai/*.log", None)
+    for plat, lists in (("windows-x64", "windows"), ("linux-x64", "linux"), ("mac-arm64", "mac"), ("mac-x64", "mac")):
+        build.classify("ai/bin/%s/" % plat, lists)
+        build.classify("ai/bin/%s/**" % plat, lists)
+    build.classify("ai/bin/", "linux windows mac")
+    build.classify("ai/", "linux windows mac")
+    build.classify("ai/config.json", "linux windows mac")
+    build.classify("ai/**", None)
+    build.executable("ai/bin/linux-x64/llama-server")
+    build.executable("ai/bin/mac-arm64/llama-server")
+    build.executable("ai/bin/mac-x64/llama-server")
+
+    # Code that holds the spoilers or starts processes: desktop builds only (the browser asks the PC).
     build.classify("game/voice_ai.py", "linux windows mac")
     build.classify("game/voice_ai.rpyc", "linux windows mac")
+    build.classify("game/model_store.py", "linux windows mac")
+    build.classify("game/model_store.rpyc", "linux windows mac")
