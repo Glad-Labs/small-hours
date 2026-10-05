@@ -42,9 +42,9 @@ screen input(prompt):
 ## Menu choices.
 screen choice(items):
     vbox:
-        xpos 60
+        xpos 40
         yalign 0.42
-        xsize 700
+        xsize 600
         spacing 12
         for i in items:
             textbutton i.caption:

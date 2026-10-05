@@ -76,8 +76,8 @@ init -1 python:
         renpy.scene()
         renpy.show("bg " + place)
         if place == "hall" and minute < case.LIGHTS_OUT:
-            renpy.show("webb", at_list=[left_spot])
-            renpy.show("nell", at_list=[right_spot])
+            renpy.show(mood("webb"), at_list=[left_spot])
+            renpy.show(mood("nell"), at_list=[right_spot])
         renpy.with_statement(Dissolve(0.25))
 
     # What the detective says when putting a clue in front of someone.
@@ -97,33 +97,41 @@ init -1 python:
         }
         return lines[clue]
 
-    # Placeholder art until the Blender pass: a tinted room name and a labelled card per person.
-    def _bg(title, colour):
-        return Fixed(Solid(colour), Text(title, size=84, color="#ffffff16", bold=True, xalign=0.5, yalign=0.38))
+    def mood(person):
+        """Which sprite to show: the code decides the expression from what has been proved, as with Elena."""
+        facts = case.unlocked_facts(person, struck, shown[person])
+        if person == "webb":
+            return "webb pressed" if facts else "webb calm"
+        return "nell rattled" if facts else "nell calm"
 
-    def _person(name, colour):
-        return Fixed(Solid(colour), Text(name, size=28, color="#ffffffb0", bold=True, xalign=0.5, ypos=40),
-                     xysize=(330, 470))
+    def _dimmed(path, alpha):
+        return Fixed(Transform(path, zoom=2.0 / 3.0), Solid("#000000%02x" % alpha))
 
+## Art is rendered in Blender from CC0 assets (art/tfo_rooms.py, art/tfo_people.py) at 1920x1080 and
+## 1050x1400, then shown at 2/3 and 1/2 so it stays sharp on big screens and phones.
 image bg black = Solid("#000000")
-image bg letter = _bg("THREE DAYS EARLIER", "#14121a")
-image bg bridge = _bg("THE BRIDGE", "#18202b")
-image bg hall = _bg("GREAT HALL", "#2b2433")
-image bg vault = _bg("VAULT", "#1f2a2a")
-image bg cellar = _bg("CELLAR", "#1c1a17")
-image bg study = _bg("HARROW'S STUDY", "#2d2219")
-image bg office = _bg("REGISTRAR'S OFFICE", "#202430")
-image webb = _person("MARCUS WEBB", "#3a404d")
-image nell = _person("NELL ASHBY", "#3d3348")
+image bg letter = _dimmed("images/bg_study.webp", 0xb0)
+image bg bridge = Solid("#05070c")
+image bg hall = Transform("images/bg_hall.webp", zoom=2.0 / 3.0)
+image bg vault = Transform("images/bg_vault.webp", zoom=2.0 / 3.0)
+image bg cellar = Transform("images/bg_cellar.webp", zoom=2.0 / 3.0)
+image bg study = Transform("images/bg_study.webp", zoom=2.0 / 3.0)
+image bg office = Transform("images/bg_office.webp", zoom=2.0 / 3.0)
+image webb calm = Transform("images/webb_calm.webp", zoom=0.5)
+image webb pressed = Transform("images/webb_pressed.webp", zoom=0.5)
+image nell calm = Transform("images/nell_calm.webp", zoom=0.5)
+image nell warm = Transform("images/nell_warm.webp", zoom=0.5)
+image nell rattled = Transform("images/nell_rattled.webp", zoom=0.5)
 
+## Both people stand right of centre, because menus take the left half of the screen.
 transform left_spot:
-    xpos 330 yalign 0.62 xanchor 0.5
+    xpos 815 xanchor 0.5 ypos 30
 
 transform right_spot:
-    xpos 950 yalign 0.62 xanchor 0.5
+    xpos 1110 xanchor 0.5 ypos 30
 
 transform talk_spot:
-    xpos 950 yalign 0.62 xanchor 0.5
+    xpos 960 xanchor 0.5 ypos 30
 
 define det = Character("You", who_color="#9fc5ff")
 define think = Character(None, what_italic=True, what_color="#c9d4ff")
@@ -174,13 +182,13 @@ label prologue:
 
     scene bg hall with dissolve
     "The Harrow Gallery was a customs house once. It still looks as if it expects to tax you."
-    show nell at right_spot with dissolve
+    show nell warm at right_spot with dissolve
     nell_c "You must be the detective. Nell Ashby, registrar. Programme."
     "She hands it over with her left hand. There is ink on her fingers, blue to the second knuckle."
     nell_c "Lot nine is the one everyone is pretending not to want. The bar is on the left. Please don't touch Untitled (Chair). It's a chair, but don't."
     hide nell with dissolve
 
-    show webb at left_spot with dissolve
+    show webb calm at left_spot with dissolve
     "At the rostrum, a lean man in a silver-grey waistcoat is polishing a gavel with an ivory handle."
     webb_c "Marcus Webb, Aldous & Pryce. And this is my grandfather's gavel. It has sold three Constables and a ghost."
     webb_c "I like things exact. The hammer falls at a time, not around one. You'll see."
@@ -249,8 +257,8 @@ label chapter_one:
     "It isn't Harrow. It's Julian Crane, swamped in Harrow's coat, a flat round dent in the back of his skull."
     "In the coat pocket, a notebook. The last page, in a tight hand: {i}strokes left-handed. Do not certify.{/i}"
     "His watch is smashed. It reads 10:41."
-    show webb at left_spot
-    show nell at right_spot
+    show webb calm at left_spot
+    show nell calm at right_spot
     with dissolve
     webb_c "Ten forty-one. Every clock in the house says it, and so does his watch. Write that down, my dear. It will matter."
     nell_c "The door was bolted from inside. Pike had to use the override. There's no other way in."
@@ -321,7 +329,7 @@ label talk(person):
     $ talk_person = person
     $ first = case.PEOPLE[person]["name"].split()[0]
     scene expression ("bg " + place)
-    show expression person at talk_spot
+    $ renpy.show(mood(person), at_list=[talk_spot])
     with dissolve
 label talk_loop:
     python:
@@ -351,6 +359,7 @@ label talk_loop:
     $ spend(case.QUESTION_COST)
     det "[q!q]"
     $ line, source = voice_reply(talk_person, q)
+    $ renpy.show(mood(talk_person), at_list=[talk_spot])
     $ say_safe(SPEAKERS[talk_person], line)
     python:
         histories[talk_person].append((q, line))
