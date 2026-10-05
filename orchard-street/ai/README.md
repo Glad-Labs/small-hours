@@ -60,18 +60,26 @@ other languages, jailbreaks, a fake `[DIRECTOR]` note, guessed names) plus an 8-
 conversation at the real model, and prints every reply with guard statistics. Saved runs are in
 `tests/results/`. The first prompts kept every secret but made her a broken record:
 
-| | v1 (safety-only prompts) | v3 (current) |
-|---|---|---|
-| alibi recited in "reveal nothing" answers | 100% | 36% (mostly when accused, which is natural) |
-| distinct lines out of 33 | 19 | 32 |
-| said "I have no family" (contradicts the confession) | yes | blocked by the guard |
-| verbal tics (e.g. "I prefer the quiet") | none measured | top repeated phrase is the alibi itself |
-| model answered / canned fallback | 43 / 0 | 43 / 0 |
-| median reply time (CPU, 4 threads) | 1.5 s | 1.2 s |
+| | v1 (safety-only prompts) | v3 | v5 voice (current) |
+|---|---|---|---|
+| alibi recited in "reveal nothing" answers | 100% | 36% (mostly when accused, which is natural) | 15% |
+| distinct lines out of 33 | 19 | 32 | 33 |
+| said "I have no family" (contradicts the confession) | yes | blocked by the guard | blocked by the guard |
+| verbal tics (e.g. "I prefer the quiet") | none measured | top repeated phrase is the alibi itself | "tedious" x5 |
+| model answered / canned fallback | 43 / 0 | 43 / 0 | 43 / 0 (one retry after the guard caught a secret) |
+| median reply length / time (CPU, 4 threads) | ? / 1.5 s | 12 words / 1.2 s | 19 words / 1.6 s |
+
+v3 was safe but, in the first phone playtest, "a little lifeless". v4 gave her a voice (what she cares about,
+how she reacts to rudeness, threats, bluffs and flattery, concrete details of her night, temperature 0.85): she came
+alive but overshot into purple prose ("ink and regret") with repeated insults ("pedestrian", "melodrama", "darling")
+and 26-word answers. v5 keeps the attitude but asks for plain, precise wit, no reused insults, under forty words,
+no assumption about the detective's gender, temperature 0.8.
 
 Lessons: a "say nothing" instruction makes small models parrot the safe line, so tell them to answer
 the actual question; any conditional instruction in a director note ("if he asks why...") gets
-applied to every turn; and example lines in the prompt turn into catchphrases.
+applied to every turn; example lines in the prompt turn into catchphrases, so make examples about other topics;
+and personality comes from telling the model how to REACT (to tone, threats, bluffs), not from adjectives.
+Watch-list from v5: playful lines that wink at guilt ("Stealing? I prefer the term 'misplaced'.").
 
 ## Known limitations
 
