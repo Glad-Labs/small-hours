@@ -14,6 +14,28 @@ init -1 python:
         import voice_ai
         config.quit_callbacks.append(lambda: voice_ai.get().stop())
 
+    if renpy.emscripten:
+        # Ren'Py's browser input calls startInput() whenever the screen is re-run, and that empties
+        # the HTML text box and refocuses it, so a phone keyboard resizing the page could wipe a
+        # half-typed question. Keep the text while the same prompt is already showing.
+        # (Same fix as orchard-street/game/script.rpy.)
+        import emscripten
+        emscripten.run_script("""
+            (function () {
+                if (window.keepTyped) return;
+                window.keepTyped = true;
+                const start = window.startInput;
+                window.startInput = function (prompt, value, allow, exclude, mask) {
+                    const div = document.getElementById("inputDiv");
+                    const shown = document.getElementById("inputPrompt");
+                    if (div.classList.contains("visible") && shown.textContent === prompt) {
+                        return;
+                    }
+                    return start(prompt, value, allow, exclude, mask);
+                };
+            })();
+        """)
+
     def end_game():
         """Desktop closes the game; a browser tab cannot quit, so it restarts for another go."""
         if renpy.emscripten:
