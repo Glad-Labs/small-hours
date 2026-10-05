@@ -34,6 +34,28 @@ init python:
         return {"idle": "AI: not started", "loading": "AI: loading model...",
                 "ready": "AI: ready", "offline": "AI: offline (canned lines)"}[ai_suspect.get().status]
 
+    if renpy.emscripten:
+        # Ren'Py's browser input calls startInput() every time the screen is re-run, and startInput
+        # empties the HTML text box and refocuses it. On a phone that wiped the question and bounced the
+        # keyboard whenever anything (a timer, the keyboard resizing the page) refreshed the screen.
+        # Keep what the player has typed while the same prompt is already showing.
+        import emscripten
+        emscripten.run_script("""
+            (function () {
+                if (window.orchardKeepTyped) return;
+                window.orchardKeepTyped = true;
+                const start = window.startInput;
+                window.startInput = function (prompt, value, allow, exclude, mask) {
+                    const div = document.getElementById("inputDiv");
+                    const shown = document.getElementById("inputPrompt");
+                    if (div.classList.contains("visible") && shown.textContent === prompt) {
+                        return;
+                    }
+                    return start(prompt, value, allow, exclude, mask);
+                };
+            })();
+        """)
+
     def ask_elena(level, question):
         """Ask the model and wait without freezing the window. Returns (line, source, seconds)."""
         if REMOTE:

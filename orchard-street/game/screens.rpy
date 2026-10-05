@@ -108,8 +108,11 @@ screen hud():
             if not renpy.emscripten:
                 textbutton "Quit" action Quit(confirm=True) text_size 20
 
-    ## The model loads in the background; refresh so the status text updates.
-    timer 1.0 repeat True action Function(renpy.restart_interaction)
+    ## The model loads in the background on desktop; refresh so the status text updates (the test
+    ## runner also relies on this tick). Not in the browser: there the status only changes when you
+    ## ask, and each refresh re-ran the question box, which wiped it on phones.
+    if not renpy.emscripten:
+        timer 1.0 repeat True action Function(renpy.restart_interaction)
 
 ## Shown while the model is composing a reply.
 screen thinking():
