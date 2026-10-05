@@ -25,14 +25,15 @@ import time
 import urllib.error
 import urllib.request
 
+import model_store
 from voices import canned_line, reply_key
 
 DEFAULTS = {
-    "server_bin": "bin/llama-server",       # relative to the ai/ folder; falls back to PATH
-    "model": "models/suspect.gguf",
+    "server_bin": "",                       # empty: model_store picks ai/bin/<platform>/llama-server
+    "model": "",                            # empty: model_store finds the shipped or downloaded model
     "threads": 4,
     "context": 4096,
-    "gpu_layers": 0,
+    "gpu_layers": "auto",                   # try the GPU (Vulkan/Metal builds), fall back to CPU if that fails
     "max_tokens": 120,
     "temperature": 0.8,
     "request_timeout": 60,
@@ -288,28 +289,46 @@ class VoiceAI:
         self._cache = {}
         self._lock = threading.Lock()
         self._schema_style = "json_schema"
+        self.gpu_layers_used = None
 
     @property
     def status(self):
         return self.state
 
+    def needs_model(self):
+        return self._model_path() is None
+
     def start(self):
+        """Begin loading the model in the background. Safe to call more than once, from any thread.
+        Without a model the state becomes "no_model" and start() can be called again once it is there."""
         with self._lock:
-            if self.state != "idle":
+            if self.state not in ("idle", "no_model"):
+                return
+            if self.needs_model():
+                self.state = "no_model"
                 return
             self.state = "loading"
+            self._stopping = False
         threading.Thread(target=self._supervise, daemon=True, name="llama-supervisor").start()
 
     def _supervise(self):
         """ONE long-lived thread owns llama-server: PR_SET_PDEATHSIG fires when the spawning thread exits."""
         restarts = 0
+        gpu = self.cfg["gpu_layers"]
+        layers = [99, 0] if gpu == "auto" else [int(gpu)]
         while not self._stopping:
             try:
-                proc = self._spawn()
+                proc = self._spawn(layers[0])
                 self._wait_ready(proc)
             except Exception as e:
+                if len(layers) > 1 and not self._stopping:
+                    self._kill()
+                    layers = layers[1:]            # the GPU path failed: run on the CPU instead
+                    self.error = "GPU unavailable, using CPU (%s)" % e
+                    continue
                 self._fail(e)
                 return
+            self.gpu_layers_used = layers[0]
             self.state = "ready"
             while not self._stopping and proc.poll() is None:
                 time.sleep(0.5)
@@ -317,27 +336,32 @@ class VoiceAI:
                 return
             restarts += 1
             if restarts > MAX_RESTARTS:
-                self._fail(RuntimeError("llama-server keeps dying (see ai/llama-server.log)"))
+                self._fail(RuntimeError("llama-server keeps dying (see llama-server.log)"))
                 return
             self.state = "loading"
 
     def _path(self, p):
         return p if os.path.isabs(p) else os.path.join(self.dir, p)
 
-    def _spawn(self):
-        binary = self._path(self.cfg["server_bin"])
-        if not os.path.exists(binary):
-            binary = shutil.which("llama-server") or binary
-        model = self._path(self.cfg["model"])
-        for what, p in (("llama-server", binary), ("model", model)):
-            if not os.path.exists(p):
-                raise FileNotFoundError("%s not found: %s" % (what, p))
+    def _model_path(self):
+        if self.cfg["model"]:
+            p = self._path(self.cfg["model"])
+            return p if os.path.exists(p) else None
+        return model_store.find_model(self.dir)
+
+    def _spawn(self, gpu_layers):
+        binary = self._path(self.cfg["server_bin"]) if self.cfg["server_bin"] else model_store.server_binary(self.dir)
+        model = self._model_path()
+        if not binary or not os.path.exists(binary):
+            raise FileNotFoundError("llama-server not found for %s" % model_store.platform_key())
+        if not model:
+            raise FileNotFoundError("voice model not found")
         port = _free_port()
         cmd = [binary, "-m", model, "--host", "127.0.0.1", "--port", str(port),
                "-c", str(self.cfg["context"]), "-t", str(self.cfg["threads"]),
-               "-ngl", str(self.cfg["gpu_layers"]), "-np", "1", "--reasoning", "off", "--no-webui"]
+               "-ngl", str(gpu_layers), "-np", "1", "--reasoning", "off", "--no-webui"]
         try:
-            log = open(os.path.join(self.dir, "llama-server.log"), "w")
+            log = open(os.path.join(model_store.data_dir(), "llama-server.log"), "w")
         except OSError:
             log = subprocess.DEVNULL
         kw = {}
@@ -349,13 +373,19 @@ class VoiceAI:
         self.base_url = "http://127.0.0.1:%d" % port
         return self.proc
 
+    def _kill(self):
+        p, self.proc = self.proc, None
+        if p and p.poll() is None:
+            p.kill()
+            p.wait(5)
+
     def _wait_ready(self, proc):
         deadline = time.time() + self.cfg["startup_timeout"]
         while time.time() < deadline:
             if self._stopping:
                 raise RuntimeError("stopped while loading")
             if proc.poll() is not None:
-                raise RuntimeError("llama-server exited early (see ai/llama-server.log)")
+                raise RuntimeError("llama-server exited early (see llama-server.log)")
             try:
                 if _http_json(self.base_url + "/health", timeout=2).get("status") == "ok":
                     return

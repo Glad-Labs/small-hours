@@ -205,3 +205,32 @@ screen slice_end():
             background Solid("#262636f2")
             hover_background Solid("#3b3b5cf2")
             action Return("finish")
+
+## First run on a desktop: the voice model is not installed yet. Returns "download" or "skip".
+screen first_run(size_gb, credit):
+    modal True
+    add Solid("#05050a")
+    vbox:
+        xalign 0.5
+        yalign 0.45
+        xsize 980
+        spacing 22
+        text "TEN FORTY-ONE" size 52 bold True color "#f2c48d" xalign 0.5
+        text "The suspects in this game are voiced by a small AI model that runs entirely on your computer. Nothing you type leaves your machine.":
+            text_align 0.5 xalign 0.5
+        text "It is a one-time download of [size_gb:.1f] GB from Google's official release ([credit]). You can start playing while it downloads; until it is ready, suspects answer with written lines.":
+            text_align 0.5 xalign 0.5 size 23 color "#b8bccb"
+        null height 10
+        hbox:
+            xalign 0.5
+            spacing 40
+            textbutton "Download and play":
+                padding (30, 16)
+                background Solid("#3b3b5cf2")
+                hover_background Solid("#55558af2")
+                action Return("download")
+            textbutton "Play without it":
+                padding (30, 16)
+                background Solid("#262636f2")
+                hover_background Solid("#3b3b5cf2")
+                action Return("skip")

@@ -10,9 +10,18 @@ init -1 python:
     import voices
 
     REMOTE = voices.remote_url() is not None
+    model_download = None           # a model_store.Download while the first-run download runs
     if not REMOTE:
         import voice_ai
+        import model_store
         config.quit_callbacks.append(lambda: voice_ai.get().stop())
+        config.quit_callbacks.append(lambda: model_download and model_download.cancel())
+
+        def _start_model_when_downloaded():
+            """Runs about 20 times a second: once the download is verified, load the model."""
+            if model_download is not None and model_download.state == "done" and voice_ai.get().status == "no_model":
+                voice_ai.get().start()
+        config.periodic_callbacks.append(_start_model_when_downloaded)
 
     if renpy.emscripten:
         # Ren'Py's browser input calls startInput() whenever the screen is re-run, and that empties
@@ -46,8 +55,19 @@ init -1 python:
     def ai_status_text():
         if REMOTE:
             return voices.status_text()
-        return {"idle": "AI: not started", "loading": "AI: loading model...",
-                "ready": "AI: ready", "offline": "AI: offline (written lines)"}[voice_ai.get().status]
+        state = voice_ai.get().status
+        if state == "no_model":
+            d = model_download
+            if d is None or d.state == "idle":
+                return "AI: not installed (written lines)"
+            if d.state == "running":
+                return "AI: downloading %d%%" % int(d.fraction * 100)
+            if d.state == "verifying":
+                return "AI: checking download..."
+            if d.state == "failed":
+                return "AI: download failed (written lines)"
+        return {"no_model": "AI: starting...", "idle": "AI: not started", "loading": "AI: loading model...",
+                "ready": "AI: ready", "offline": "AI: offline (written lines)"}[state]
 
     def spend(minutes):
         global minute
@@ -165,6 +185,12 @@ label start:
     python:
         if not REMOTE:
             voice_ai.get().start()      # load the model while the player reads the prologue
+    if not REMOTE and voice_ai.get().status == "no_model":
+        $ choice = renpy.call_screen("first_run", size_gb=model_store.MODEL_SIZE / 1e9, credit=model_store.MODEL_CREDIT)
+        if choice == "download":
+            python:
+                model_download = model_store.Download()
+                model_download.start()
     show screen hud
     jump prologue
 
