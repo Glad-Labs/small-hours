@@ -27,6 +27,21 @@ orchard-street/build/
 bakeoff/*.log
 orchard-street/tests/screenshots/
 
+# Ten Forty-One: same layout as orchard-street
+ten-forty-one/game/cache/
+ten-forty-one/game/saves/
+ten-forty-one/log.txt
+ten-forty-one/traceback.txt
+ten-forty-one/errors.txt
+ten-forty-one/ai/bin/*
+ten-forty-one/ai/models/*
+!ten-forty-one/ai/bin/.gitkeep
+!ten-forty-one/ai/models/.gitkeep
+ten-forty-one/ai/llama-server.log
+ten-forty-one/ai/serve.log
+ten-forty-one/build/
+ten-forty-one/tests/screenshots/
+
 # Blender art pipeline: raw renders and drafts (the game loads the WebP copies in game/images)
 art/out/
 art/_draft/
