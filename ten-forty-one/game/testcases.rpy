@@ -35,6 +35,7 @@ testcase slice:
     click "Great Hall (2 min)"
     advance until screen "choice" timeout 20
     click "Talk to Marcus Webb"
+    advance until screen "choice" timeout 20
     click "Ask Marcus a question"
     advance until screen "input" timeout 10
     type "Where were you at half past nine?"

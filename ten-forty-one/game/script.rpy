@@ -195,110 +195,6 @@ label start:
     jump prologue
 
 
-## ---------------------------------------------------------------------------------------------
-## Prologue (authored). Everything the player needs later is planted here.
-label prologue:
-    scene bg letter with fade
-    "Three days ago a letter reached you on Harrow Gallery paper."
-    "{i}Irregularities in the Calder provenance. Discretion essential. Come to Thursday's sale as my guest.{/i} Signed, Edmund Harrow."
-    "The sale had been set for Saturday. Someone moved it to Thursday. The forecast for Thursday said storm."
-
-    scene bg bridge with dissolve
-    "6:00 pm. The lift bridge rattles under your tyres. Behind you the channel is already white."
-
-    scene bg hall with dissolve
-    "The Harrow Gallery was a customs house once. It still looks as if it expects to tax you."
-    show nell warm at right_spot with dissolve
-    nell_c "You must be the detective. Nell Ashby, registrar. Programme."
-    "She hands it over with her left hand. There is ink on her fingers, blue to the second knuckle."
-    nell_c "Lot nine is the one everyone is pretending not to want. The bar is on the left. Please don't touch Untitled (Chair). It's a chair, but don't."
-    hide nell with dissolve
-
-    show webb calm at left_spot with dissolve
-    "At the rostrum, a lean man in a silver-grey waistcoat is polishing a gavel with an ivory handle."
-    webb_c "Marcus Webb, Aldous & Pryce. And this is my grandfather's gavel. It has sold three Constables and a ghost."
-    webb_c "I like things exact. The hammer falls at a time, not around one. You'll see."
-    hide webb with dissolve
-
-    "Across the room a stout man in a velvet jacket is holding court: Edmund Harrow, judging by how the others give him space."
-    "Beside him a thin, nervous man in a cardigan rubs his hands together. Julian Crane, the authenticator, says your programme."
-    harrow "Julian, you're blue. The vault's an icebox. Take my coat, I insist."
-    "Harrow drapes a camel coat over Crane's shoulders. It swamps him."
-    "A grey-haired caretaker shoulders past with a crate of wine."
-    pike "Cellar door propped open all night for the wine. Whoever's idea that was."
-
-    "There is time for a word with two people before the sale."
-    $ talked = []
-label prologue_mingle:
-    menu:
-        "Edmund Harrow, your host" if "harrow" not in talked:
-            $ talked.append("harrow")
-            harrow "Detective! Delighted, delighted. You must try the... is something the matter?"
-            menu:
-                "Thank him for the invitation":
-                    harrow "Invitation?"
-                    "His smile stays where it is. His eyes don't."
-                    harrow "I wrote you no letter. I don't... Who sent you?"
-                    $ harrow_denied = True
-                    "Before you can answer, Webb calls him to the rostrum, and he goes like a man glad of the excuse."
-                "Ask about the Calder works":
-                    harrow "Magnificent. Late, unfinished, raw. They will make history tonight."
-                    "He doesn't meet your eyes once."
-
-        "The young man at the bar" if "dom" not in talked:
-            $ talked.append("dom")
-            dom "Dom Harrow-Bell. Nephew, heir, family embarrassment. Funny, they moved the date. It was meant to be Saturday."
-            dom "Uncle Eddie says the buyers fly out on Friday. Uncle Eddie says a lot of things."
-
-        "The man by the terrace doors" if "ibarra" not in talked:
-            $ talked.append("ibarra")
-            ibarra "Tomás Ibarra. Physician, collector, insomniac. Forgive me, I have to take this."
-            "He steps out onto the terrace with his phone already at his ear, and the colour goes out of his face."
-
-    if len(talked) < 2:
-        jump prologue_mingle
-
-    "8:30 pm. The sale begins. Webb is very good: he makes a room of rich people feel poor."
-    "9:00 pm. The interval. The room scatters to the bar, the terrace and the corridors. Crane goes down to the vault for a last look at the lots."
-    "9:40 pm. The sale resumes. Webb raps the block with a plain boxwood gavel. You don't remember when the ivory one went."
-    "10:35 pm. Harrow slips out of the hall. Pike goes for the vault keys, to bring out lot nine."
-    "Out of habit you count the room. Webb at the rostrum. Nell at the catalogue desk. Dom at the bar. Ibarra by the window. Everyone but Harrow and Pike."
-    scene bg black
-    "10:41 pm. The lights die."
-    "One second. Two. They stutter back on. Every clock in the hall has stopped."
-    "10:44 pm. A shout from the vault corridor."
-    pike "Mr Harrow! Mr Harrow's dead!"
-    jump chapter_one
-
-
-## ---------------------------------------------------------------------------------------------
-## Chapter 1: The Wrong Body.
-label chapter_one:
-    $ place = "vault"
-    scene bg vault with fade
-    "10:48 pm. The vault door hangs open on its override. Pike stands in the doorway, white."
-    "A man lies face down on the floor in a camel coat."
-    "You kneel and turn him over."
-    $ found.append("body")
-    "It isn't Harrow. It's Julian Crane, swamped in Harrow's coat, a flat round dent in the back of his skull."
-    "In the coat pocket, a notebook. The last page, in a tight hand: {i}strokes left-handed. Do not certify.{/i}"
-    "His watch is smashed. It reads 10:41."
-    show webb calm at left_spot
-    show nell calm at right_spot
-    with dissolve
-    webb_c "Ten forty-one. Every clock in the house says it, and so does his watch. Write that down, my dear. It will matter."
-    nell_c "The door was bolted from inside. Pike had to use the override. There's no other way in."
-    pike "Mr Harrow's not in his study. Not anywhere."
-    webb_c "His coat. His vault. And now he's gone. I hate to say it."
-    $ assumptions[:] = list(case.ASSUMPTION_ORDER)
-    "You open your notebook. Three things everyone already believes go in first:"
-    "{b}Crane died at 10:41.{/b} {b}The vault was sealed.{/b} {b}Harrow killed him and ran.{/b}"
-    think "Nobody can cross the bridge before dawn, and I don't trust the lights in this place."
-    "Every search, walk and question moves the clock. Open your notebook to challenge what everyone believes."
-    $ minute = case.START
-    jump investigate
-
-
 ## The loop: fire any due clock events, then let the player choose what to spend time on.
 label investigate:
     $ due = case.due_events(minute, fired)
@@ -332,9 +228,8 @@ label investigate:
     elif action == "talk":
         call talk(arg)
     elif action == "others":
-        $ spend(1)
-        dom "Later, Detective. I'm drinking for two: me and Uncle Eddie, wherever he is."
-        ibarra "I've told the caretaker everything I know, which is nothing. I'd like to keep it that way."
+        $ spend(2)
+        call others
     elif action == "go":
         python:
             dests = [(("%s (%d min)" % (case.PLACES[p]["name"], case.travel_cost(place, p))), p)
@@ -357,6 +252,9 @@ label talk(person):
     scene expression ("bg " + place)
     $ renpy.show(mood(person), at_list=[talk_spot])
     with dissolve
+    if person not in met:
+        $ met.append(person)
+        $ renpy.call("meet_" + person)
 label talk_loop:
     python:
         options = [("Ask %s a question" % first, "ask")]
@@ -424,126 +322,3 @@ label notebook_flow:
     else:
         think "That doesn't touch it."
     jump notebook_flow
-
-
-label broke_a_time(clue):
-    if clue == "chart":
-        think "The chart doesn't care about the clocks. At 9:31 the warmth of a living man went out of that room."
-    else:
-        think "9:26, read. 9:45, never opened. Julian Crane was dead before ten."
-    think "So 10:41 is a lie, and somebody went to the trouble of telling it."
-    think "Every alibi for 10:41 is worthless now. Including the one I watched with my own eyes: Webb, on the rostrum."
-    "{b}Struck out:{/b} Crane died at 10:41."
-    return
-
-label broke_a_sealed(clue):
-    think "Bolted from the inside, and a way out the size of a grille. The vault was never sealed."
-    think "And Nell told me there was no other way in."
-    "{b}Struck out:{/b} The vault was sealed."
-    return
-
-label broke_a_harrow(clue):
-    think "Whoever killed Crane left through that duct. Harrow is a big man; he'd stick at the shoulders."
-    think "Whoever crawled out of there was slim."
-    "{b}Struck out:{/b} Harrow killed him and ran."
-    return
-
-label hint_a_time_watch:
-    think "The crown is pulled out. Someone set this watch to 10:41 by hand."
-    think "That proves the time was faked. It doesn't tell me when he really died."
-    return
-
-label hint_a_time_timer:
-    think "The clocks stopped because a timer told them to, at a time somebody chose."
-    think "So when did he really die?"
-    return
-
-label hint_a_harrow_letter:
-    think "Harrow was frightened of something. Frightened men run. They don't always kill."
-    return
-
-label impossible_crime:
-    think "Wait."
-    think "If Crane died at 10:41, nobody could have killed him."
-    think "Every slim person in this house was in front of me in the hall at 10:41. The only two who weren't, Harrow and Pike, could never fit through that duct."
-    think "So he didn't die at 10:41. Prove it."
-    return
-
-
-## ---------------------------------------------------------------------------------------------
-## Finding things. Each label narrates one clue from case.py.
-label clue_watch:
-    "Crane's watch: a plain steel thing, crystal smashed, hands at 10:41."
-    "The crown is pulled all the way out. A watch stops like that when someone is setting it."
-    return
-
-label clue_duct:
-    "The door bolt is thrown from the inside, its keeper sheared by Pike's override."
-    "Low on the back wall, behind a rack of frames, an old ventilation grille sits off its screws, leaning against the wall."
-    "Behind it, a duct runs off into the dark. A slim person could crawl through it. A big one would stick."
-    return
-
-label clue_chart:
-    "On a shelf by the door, a climate recorder: a drum of paper turned by a clockwork spring, a pen tracing the vault's warmth and damp."
-    "Not on the mains. It didn't stop at 10:41."
-    "The trace climbs from 9:14, when someone shut themselves in. At 9:31 it turns and falls away. The warmth of a living person, going out."
-    return
-
-label clue_phone:
-    "Crane's phone is in his trouser pocket. No lock screen. He trusted people."
-    "A text from his wife at 9:26: {i}don't let them bully you x{/i}. Read."
-    "Another at 9:45: {i}ring me when you're done?{/i} Never opened."
-    return
-
-label clue_thread:
-    "The duct comes out low in the cellar wall, behind the wine racks. The grille here is back on its screws, but only just."
-    "Fresh scuffs in the dust. Caught on the grille's edge, a single thread of silver-grey wool."
-    return
-
-label clue_timer:
-    "The fuse cupboard. Among the old ceramic fuses, something new: a plug-in timer on the circuit marked CLOCKS."
-    "Set to cut the power at 10:41 and restore it at 10:42."
-    think "Every clock in the house stopped because somebody told it to."
-    return
-
-label clue_gavel:
-    "Behind the wine racks, a bin of packing straw and broken bottles."
-    "Wrapped in a rag at the bottom: an ivory-handled gavel. The head is cracked, and stained dark."
-    return
-
-label clue_letter:
-    "Harrow's desk. The grate behind it is still warm."
-    "A half-burnt page in his big looping hand: {i}...every Calder sold since 2019 through Aldous & Pryce is...{/i} The rest is ash."
-    return
-
-label clue_shelf:
-    "Nell's office is the tidiest room in the building. Every shelf is labelled."
-    "One label sits over a gap: {i}CALDER: SALES LEDGER.{/i}"
-    return
-
-
-## ---------------------------------------------------------------------------------------------
-## Clock events.
-label event_phones:
-    scene bg hall
-    "10:58 pm. Pike comes in from the storm, soaked to the waist."
-    pike "Phones are dead. Landline too. I went out to the box on the wall. The line's cut. Clean."
-    pike "That's not the wind."
-    return
-
-label event_bridge:
-    scene bg hall
-    "11:05 pm. Pike again, out of breath."
-    pike "Bridge won't come down. The pump's dead. The fuse is gone from the box. Somebody took it."
-    think "The storm didn't trap us here. Somebody did."
-    return
-
-label event_lights_out:
-    scene bg black with Dissolve(1.0)
-    "11:30 pm. Somewhere below you the generator coughs, twice, and dies."
-    "Every light in the Harrow Gallery goes out at once."
-    nell_c "Detective? Are you still there?"
-    webb_c "Nobody move. My dear, nobody move at all."
-    $ renpy.call_screen("slice_end")
-    $ end_game()
-    return

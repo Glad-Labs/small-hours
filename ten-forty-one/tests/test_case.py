@@ -29,7 +29,7 @@ check(case.travel_cost("vault", "cellar") == 5, "vault to cellar goes through th
 check(case.travel_cost("hall", "hall") == 0, "staying put is free")
 
 print("== data is consistent")
-script = open(os.path.join(ROOT, "game", "script.rpy")).read()
+script = "".join(open(os.path.join(ROOT, "game", f)).read() for f in ("script.rpy", "story.rpy"))
 labels = set(re.findall(r"^label (\w+)", script, re.M))
 for c, d in case.CLUES.items():
     check(d["place"] in case.PLACES, "clue %s is in a real place" % c)
