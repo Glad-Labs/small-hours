@@ -46,8 +46,33 @@ def _skin_positions(body):
     return pos, nor
 
 
+def _flatten_front(bm, body_pts, margin, drape=0):
+    """Tailored garments hold a straight front instead of following the chest: for each height, push the cloth out to
+    the most forward point of the body there (plus margin), fading out toward the sides. Never moves cloth inward."""
+    step = 0.02
+    prof = {}
+    for p in body_pts:
+        if abs(p.x) < 0.17:
+            b = int(round(p.z / step))
+            prof[b] = min(prof.get(b, 9.0), p.y)
+    keys = sorted(prof)
+    # running minimum: never cut in. With drape, cloth also hangs from the fullest point up to `drape` steps above.
+    run = {b: min(prof.get(b + d, 9.0) for d in range(-2, 3 + drape)) for b in keys}
+    smooth = {b: sum(run.get(b + d, run[b]) for d in range(-2, 3)) / 5.0 for b in keys}
+    for v in bm.verts:
+        b = v.co.z / step
+        lo, hi = int(b // 1), int(b // 1) + 1
+        if lo not in smooth or hi not in smooth or v.co.y > 0.0:
+            continue
+        t = b - lo
+        target = smooth[lo] * (1 - t) + smooth[hi] * t - margin
+        w = max(0.0, min(1.0, (0.19 - abs(v.co.x)) / 0.09))
+        w = w * w * (3 - 2 * w)
+        v.co.y = min(v.co.y, v.co.y + (target - v.co.y) * w)
+
+
 def build(body, parts, name, offset=0.006, smooth_iters=12, thickness=0.0025, keep=None, band_width=0.03,
-          planes=(), boundary_smooth=12):
+          planes=(), boundary_smooth=12, flatten=None, drape=0):
     """Make a garment mesh from the body faces whose vertices all belong to `parts`.
 
     keep(position) -> bool can trim further (hem height, neckline, V-neck). Returns the new object; its
@@ -88,6 +113,8 @@ def build(body, parts, name, offset=0.006, smooth_iters=12, thickness=0.0025, ke
     for _ in range(smooth_iters):
         bmesh.ops.smooth_vert(bm, verts=[v for v in bm.verts if not v.is_boundary], factor=0.5,
                               use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    if flatten is not None:
+        _flatten_front(bm, [pos[i] for i in used], flatten, drape)
     # Distance (in edges) from the open edges, for ribbed bands.
     dist = {v: (0 if v.is_boundary else None) for v in bm.verts}
     q = deque(v for v in bm.verts if v.is_boundary)
@@ -197,8 +224,8 @@ def _neck_hem(neck_z, hem_z, dip=0.25):
 def sweater(body, colour="#7f8c6c", neck_z=None, hem_z=None):
     """A long-sleeved knit sweater with ribbed cuffs, hem and crew neck."""
     planes, keep = _neck_hem(neck_z, hem_z, dip=0.3)
-    ob = build(body, TORSO + SHOULDERS + UPPER_ARMS + FOREARMS + NECK, "sweater", offset=0.016, smooth_iters=22,
-               thickness=0.004, keep=keep, planes=planes)
+    ob = build(body, TORSO + SHOULDERS + UPPER_ARMS + FOREARMS + NECK, "sweater", offset=0.02, smooth_iters=30,
+               thickness=0.004, keep=keep, planes=planes, flatten=0.004, drape=3)
     _assign(ob, _fabric("knit", colour, rib_scale=120.0, rib_strength=1.0, band_rib_scale=260.0, sheen=0.05))
     return ob
 
@@ -206,7 +233,7 @@ def sweater(body, colour="#7f8c6c", neck_z=None, hem_z=None):
 def shirt(body, colour="#7d7769", neck_z=None, hem_z=None):
     planes, keep = _neck_hem(neck_z, hem_z, dip=0.15)
     ob = build(body, TORSO + SHOULDERS + UPPER_ARMS + FOREARMS + NECK, "shirt", offset=0.011, smooth_iters=18,
-               thickness=0.0015, keep=keep, band_width=0.02, planes=planes)
+               thickness=0.0015, keep=keep, band_width=0.02, planes=planes, flatten=0.002)
     _assign(ob, _fabric("cotton", colour, rib_scale=900.0, rib_strength=0.05, band_rib_scale=900.0, rough=0.6,
                         sheen=0.05, fuzz=1500.0))
     return ob
@@ -223,7 +250,7 @@ def waistcoat(body, colour="#4d535a", v_bottom_z=None, hem_z=None, buttons=5):
                 return False
         return True
     ob = build(body, TORSO + SHOULDERS, "waistcoat", offset=0.011, smooth_iters=16, thickness=0.003, keep=keep,
-               band_width=0.012)
+               band_width=0.012, flatten=0.012)
     _assign(ob, _fabric("waistcoat_wool", colour, rib_scale=700.0, rib_strength=0.15, band_rib_scale=700.0,
                         rough=0.55, sheen=0.05, fuzz=1200.0))
     if v_bottom_z is not None and hem_z is not None and buttons:

@@ -15,6 +15,12 @@ import lib  # noqa: E402
 args = lib.script_args()
 name, out = args[0], args[1]
 fast = "--fast" in args
+
+
+def opt(flag, default=None):
+    """The value after a --flag, or the default."""
+    return args[args.index(flag) + 1] if flag in args else default
+
 LIB = "/store/asset-library/daz"
 G9 = LIB + "/People/Genesis 9"
 ANAT = G9 + "/Anatomy/Daz Originals/Base Anatomy"
@@ -41,7 +47,8 @@ if "--hair" in args:
     extras.append(G9 + "/Hair/Daz Originals/Base Hair/G9 Base dForce Pixie Hair.duf")
 if "--shirt" in args:
     extras.append(G9 + "/Clothing/Daz Originals/Base Clothing/G9 Base Shirt.duf")
-extras.append(ANAT + "/Eyebrows Card/Style 03/" + sorted(os.listdir(ANAT + "/Eyebrows Card/Style 03"))[0]) if os.path.isdir(ANAT + "/Eyebrows Card/Style 03") else None
+BROW_STYLE = "Style %02d" % int(opt("--browstyle", 3))
+extras.append(ANAT + "/Eyebrows Card/%s/" % BROW_STYLE + sorted(os.listdir(ANAT + "/Eyebrows Card/%s" % BROW_STYLE))[0]) if os.path.isdir(ANAT + "/Eyebrows Card/%s" % BROW_STYLE) else None
 load([G9 + "/Characters/%s for Genesis 9.duf" % name] +
      [ANAT + "/Genesis 9 %s.duf" % part for part in ("Eyes", "Mouth", "Tear", "Eyelashes")] + extras)
 
@@ -120,6 +127,30 @@ meshes = [o for o in bpy.data.objects if o.type == "MESH"]
 for o in bpy.context.view_layer.objects:
     o.select_set(o.type == "MESH")
 body = next(o for o in meshes if o.name.startswith("%s for Genesis 9" % name))
+def apply_shapes(spec):
+    """Blend whole-head shapes from the pack's characters, e.g. 'BaseFeminine=1.0,Laura=0.25,Amala=0.2'. Shapes the
+    character does not have yet are loaded from the pack first."""
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    folder = "/store/asset-library/daz/data/Daz 3D/Genesis 9/Base/Morphs/Daz 3D/Base Characters 9/"
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == rig)
+    bpy.context.view_layer.objects.active = rig
+    for item in spec.split(","):
+        key, val = item.split("=")
+        prop = key if "_bs_" in key else key + "_head_bs_Head"
+        if prop not in rig.keys():
+            fname = prop + ".dsf"
+            bpy.ops.daz.import_custom_morphs(filepath=folder + fname, directory=folder, files=[{"name": fname}],
+                                             bodypart="Face")
+        api.set_slider(rig, prop, float(val))
+        print("SHAPE", prop, val, "(present)" if prop in rig.keys() else "(MISSING)")
+    api.update_drivers(rig)
+    bpy.context.view_layer.update()
+
+
+if opt("--shape"):
+    apply_shapes(opt("--shape"))
+
 auto_fit(body, [(o, "pair" if "Eyes" in o.name else ("block" if "Mouth" in o.name else None))
                 for o in meshes if o is not body])
 # Clothes made for a slimmer figure can still sit partly inside the skin: push those parts just outside it.
@@ -244,10 +275,10 @@ def cutout(m, alpha_path, colour=None, colour_path=None):
 
 lashes = find("Eyelashes")
 for slot in (lashes.material_slots if lashes else []):
-    cutout(slot.material, BASE + "Eyelashes/Genesis9_Eyelashes01_C.jpg", colour=(0.015, 0.01, 0.008, 1))
+    cutout(slot.material, BASE + "Eyelashes/Genesis9_Eyelashes0%d_C.jpg" % int(opt("--lashes", 1)), colour=(0.015, 0.01, 0.008, 1))
 brows = find("Eyebrows")
 for slot in (brows.material_slots if brows else []):
-    cutout(slot.material, BASE + "Eyebrows/OpacityCutout02_Thick.jpg", colour=((tuple(float(x) for x in args[args.index("--brow") + 1].split(",")) + (1,)) if "--brow" in args else (0.045, 0.028, 0.02, 1)))
+    cutout(slot.material, BASE + ("Eyebrows/OpacityCutout01_Thin.jpg" if opt("--browcut", "thick") == "thin" else "Eyebrows/OpacityCutout02_Thick.jpg"), colour=((tuple(float(x) for x in args[args.index("--brow") + 1].split(",")) + (1,)) if "--brow" in args else (0.045, 0.028, 0.02, 1)))
 
 tear = find("Tear")
 for slot in (tear.material_slots if tear else []):
@@ -380,8 +411,12 @@ if "--combbob" in args:
     chin = min((body.matrix_world @ v.co).z for v in body.data.vertices
                if abs((body.matrix_world @ v.co).x) < 0.02 and (body.matrix_world @ v.co).y < eye_mid.y - 0.02
                and eye_mid.z - 0.16 < (body.matrix_world @ v.co).z < eye_mid.z)
-    style = hairgen.Style(cut="bob", part_x=0.006, length_z=chin - 0.005,
-                          strands=50000 if fast else 90000, clumps=900 if fast else 1500, taper=0.16, hang_volume=0.006)
+    style = hairgen.Style(cut="bob", part_x=0.006, length_z=chin - float(opt("--hairlen", 0.005)),
+                          strands=50000 if fast else 90000, clumps=900 if fast else 1500, taper=0.16, hang_volume=0.006,
+                          frame=42.0, comb_back=0.3, hairline_up=-0.012,
+                          wave=float(opt("--waves", 0.0)), shine=float(opt("--shine", 0.0)),
+                          melanin=float(opt("--haircolor", "0.86,0.5").split(",")[0]),
+                          redness=float(opt("--haircolor", "0.86,0.5").split(",")[1]))
     hairgen.grow(body, eye_mid, style, name="nell_hair")
 
 if "--crop" in args:
@@ -390,8 +425,8 @@ if "--crop" in args:
     ev = [e.matrix_world @ v.co for v in e.data.vertices]
     eye_mid = sum(ev, Vector((0, 0, 0))) / len(ev)
     style = hairgen.Style(cut="crop", part_x=0.025, strands=40000 if fast else 80000, clumps=1200 if fast else 2000,
-                          color=(0.012, 0.0125, 0.014), radius=0.00007, lift=0.0025, volume=0.012, hairline_exp=0.6,
-                          top_len=0.06, side_len=0.012, sweep=1.0, cap_shade=0.08, hairline_up=0.012, step=0.004)
+                          color=(0.0065, 0.007, 0.0085), radius=0.00007, lift=0.0025, volume=0.012, hairline_exp=0.6,
+                          top_len=0.06, side_len=0.012, sweep=1.0, cap_shade=0.08, hairline_up=0.012 + float(opt("--recede", 0.0)), step=0.004)
     hairgen.grow(body, eye_mid, style, name="webb_hair")
 
 # --- clothes made from the body (art/garments.py) ---------------------------------------------------------
@@ -450,13 +485,24 @@ if "--knit" in args and find("Shirt"):
             print("KNIT still-shirt-material on", o.name, [sl.material.name for sl in o.material_slots])
 
 bpy.context.view_layer.update()
+# --- skin: ageing and makeup, anchored to the neutral face --------------------------------------------------
+if opt("--age") or opt("--makeup"):
+    import skinfx
+    bpy.context.view_layer.update()
+    lms = skinfx.landmarks(body)
+    if opt("--age"):
+        skinfx.age(body, lms, amount=float(opt("--age")))
+    if opt("--makeup"):
+        skinfx.makeup(body, lms, amount=float(opt("--makeup")))
+    print("SKINFX age", opt("--age"), "makeup", opt("--makeup"))
+
 # --- expression: Daz's FACS controls, the same face units the MakeHuman characters used ------------------
 EXPRESSIONS = {
     "neutral": {},
     "calm": {"facs_ctrl_MouthSmile": 0.3, "facs_ctrl_CheekSquint": 0.15, "facs_ctrl_BrowInnerUp": 0.2,
              "facs_ctrl_EyesSquint": 0.1},
-    "warm": {"facs_ctrl_MouthSmile": 0.95, "facs_ctrl_MouthSmileWiden": 0.45, "facs_ctrl_CheekSquint": 0.65,
-             "facs_ctrl_EyesSquint": 0.35, "facs_ctrl_BrowInnerUp": 0.25, "facs_ctrl_MouthDimple": 0.5},
+    "warm": {"facs_ctrl_MouthSmile": 0.8, "facs_ctrl_MouthSmileWiden": 0.35, "facs_ctrl_CheekSquint": 0.3,
+             "facs_ctrl_EyesSquint": 0.2, "facs_ctrl_BrowInnerUp": 0.22, "facs_ctrl_MouthDimple": 0.35},
     "rattled": {"facs_ctrl_BrowInnerUp": 1.0, "facs_ctrl_EyeWide": 0.85, "facs_ctrl_MouthPress": 0.3,
                 "facs_ctrl_MouthFrown": 0.45, "facs_BrowOuterUpLeft": 0.5, "facs_BrowOuterUpRight": 0.5},
     "charm": {"facs_ctrl_MouthSmile": 0.8, "facs_ctrl_MouthSmileWiden": 0.2, "facs_ctrl_CheekSquint": 0.45,
@@ -498,7 +544,7 @@ lib.light("hair", "AREA", tuple(eye + Vector((0.0, 0.6, 1.1))), 18, "#fff0dc", s
 sprite = "--sprite" in args
 if sprite:
     # Same framing as the game's existing character sprites: orthographic, head and torso, 1050x1400, transparent.
-    cz = eye.z - 0.215
+    cz = eye.z - 0.2
     cam = lib.camera((eye.x + math.sin(yaw) * 5.0, eye.y - math.cos(yaw) * 5.0, cz), (eye.x, eye.y, cz), lens=50)
     cam.data.type = "ORTHO"
     cam.data.ortho_scale = 1.0           # head to hips: ends above the leg openings, so no trousers are needed
@@ -509,7 +555,7 @@ else:
     cam.data.dof.focus_distance = (cam.location - eye).length
     cam.data.dof.aperture_fstop = 2.8
     w, h, spp = (540, 675, 96) if fast else (1080, 1350, 200)
-lib.setup_render(w, h, spp, transparent=sprite, exposure=-1.5)
+lib.setup_render(w, h, spp, transparent=sprite, exposure=float(opt("--exposure", -0.85)))
 bpy.context.scene.render.threads_mode = "FIXED"
 bpy.context.scene.render.threads = 16
 lib.render(out)
@@ -641,3 +687,48 @@ if "--vgdiag2" in args:
 if "--bones" in args:
     rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
     print("BONES", [b.name for b in rig.pose.bones if any(k in b.name for k in ("upperarm", "forearm", "hand", "shoulder", "collar", "clavicle"))][:40])
+
+if "--inspect" in args:
+    print("INSPECT slots", [(i, sl.material.name if sl.material else None) for i, sl in enumerate(body.material_slots)])
+    sk = body.data.shape_keys
+    if sk:
+        print("INSPECT keys", len(sk.key_blocks))
+        print("INSPECT shape", " ".join("%s=%.2f" % (k.name, k.value) for k in sk.key_blocks if k.name != "Basis" and not k.name.startswith("facs_")))
+
+if "--morphtest" in args:
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == rig)
+    bpy.context.view_layer.objects.active = rig
+    before = {k.name for k in body.data.shape_keys.key_blocks}
+    d = "/store/asset-library/daz/data/Daz 3D/Genesis 9/Base/Morphs/Daz 3D/Base Characters 9/"
+    try:
+        r = bpy.ops.daz.import_custom_morphs(filepath=d + "Amala_head_bs_Head.dsf", directory=d,
+                                             files=[{"name": "Amala_head_bs_Head.dsf"}], bodypart="Face")
+        print("MORPHTEST op", r, api.get_error_message()[:300])
+    except Exception as e:
+        print("MORPHTEST failed", str(e)[:400])
+    after = {k.name for k in body.data.shape_keys.key_blocks}
+    print("MORPHTEST new keys", sorted(after - before))
+    print("MORPHTEST rig props", [k for k in rig.keys() if "mala" in k][:10])
+
+if "--skindiag" in args:
+    m = body.material_slots[5].material
+    nt = m.node_tree
+    print("SKIN nodes", [(n.bl_idname.replace("ShaderNode", ""), n.name, n.label) for n in nt.nodes][:60])
+    for l in nt.links:
+        if l.to_node.bl_idname in ("ShaderNodeBsdfPrincipled", "ShaderNodeOutputMaterial") or "Group" in l.to_node.bl_idname:
+            print("SKIN link", l.from_node.name, l.from_socket.name, "->", l.to_node.name, l.to_socket.name)
+    bsdf = [n for n in nt.nodes if n.bl_idname == "ShaderNodeBsdfPrincipled"]
+    print("SKIN bsdf count", len(bsdf))
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev = body.evaluated_get(dg); me = ev.to_mesh()
+    names = {vg.index: vg.name for vg in body.vertex_groups}
+    for g in ("l_lipcorner", "r_lipcorner", "lipuppermiddle", "liplowermiddle", "l_nostril", "r_nostril", "l_cheek", "l_eyelidupper", "l_eyelidlower", "l_browinner", "l_browouter", "centerbrow", "chin", "l_infraorbital", "l_squint"):
+        pts = [body.matrix_world @ me.vertices[v.index].co for v in body.data.vertices if any(names.get(x.group) == g and x.weight > 0.5 for x in v.groups)]
+        if pts:
+            c = sum(pts, Vector((0, 0, 0))) / len(pts)
+            print("LM %s n=%d x=%.3f y=%.3f z=%.3f" % (g, len(pts), c.x, c.y, c.z))
+    ev.to_mesh_clear()
+    e_o = find("Eyes"); evs = [e_o.matrix_world @ v.co for v in e_o.data.vertices]
+    em = sum(evs, Vector((0, 0, 0))) / len(evs); print("LM eyes mid x=%.3f y=%.3f z=%.3f" % (em.x, em.y, em.z))

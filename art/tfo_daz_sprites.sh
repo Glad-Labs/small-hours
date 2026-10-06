@@ -10,12 +10,14 @@ FASTFLAG=""; SUF=""
 if [ -n "$FAST" ]; then FASTFLAG="--fast"; SUF="_fast"; fi
 
 # name  character  expression  yaw  extra flags
+WEBB="--waistcoat --crop --browstyle 6 --brow 0.07,0.07,0.075 --age 1.0 --recede 0.02"
+NELL="--sweater --combbob --haircolor 0.72,1.0 --hairlen 0.075 --waves 0.06 --shine 0.4 --makeup 1.0 --shape Kat=0.0,BaseFeminine=1.0,BaseFeminine_body_bs_Body=1.0,Amala=1.0 --browstyle 4 --browcut thin --lashes 2 --brow 0.07,0.03,0.018"
 POSES=(
-  "webb_calm    Matt charm   12  --waistcoat --crop --brow 0.07,0.07,0.075"
-  "webb_pressed Matt pressed 12  --waistcoat --crop --brow 0.07,0.07,0.075"
-  "nell_calm    Kat  calm   -12  --sweater --combbob"
-  "nell_warm    Kat  warm   -12  --sweater --combbob"
-  "nell_rattled Kat  rattled -12 --sweater --combbob"
+  "webb_calm    Matt charm   12  $WEBB"
+  "webb_pressed Matt pressed 12  $WEBB"
+  "nell_calm    Kat  calm   -12  $NELL"
+  "nell_warm    Kat  warm   -12  $NELL"
+  "nell_rattled Kat  rattled -12 $NELL"
 )
 for line in "${POSES[@]}"; do
   set -- $line

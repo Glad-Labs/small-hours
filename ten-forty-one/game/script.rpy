@@ -145,10 +145,10 @@ image nell rattled = Transform("images/nell_rattled.webp", zoom=0.5)
 
 ## Both people stand right of centre, because menus take the left half of the screen.
 transform left_spot:
-    xpos 815 xanchor 0.5 ypos 30
+    xpos 765 xanchor 0.5 ypos 30
 
 transform right_spot:
-    xpos 1110 xanchor 0.5 ypos 30
+    xpos 1170 xanchor 0.5 ypos 30
 
 transform talk_spot:
     xpos 960 xanchor 0.5 ypos 30

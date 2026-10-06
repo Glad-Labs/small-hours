@@ -24,7 +24,7 @@ class Style:
                  melanin=0.86, redness=0.5, radius=0.00005, lift=0.003, volume=0.006, hang_volume=0.012,
                  curl_under=0.02, back_shorter=0.015, fringe=False, seed=11,
                  top_len=0.055, side_len=0.014, sweep=0.9, cap_shade=None, hairline_up=0.0, hairline_exp=1.35,
-                 tint=None, color=None, taper=0.0):
+                 tint=None, color=None, taper=0.0, frame=58.0, comb_back=0.65, wave=0.0, wave_len=0.075, shine=0.0):
         self.cut, self.part_x, self.length_z = cut, part_x, length_z
         self.strands, self.clumps, self.step = strands, clumps, step
         self.melanin, self.redness, self.radius = melanin, redness, radius
@@ -33,6 +33,8 @@ class Style:
         self.seed = seed
         self.top_len, self.side_len, self.sweep = top_len, side_len, sweep      # 'crop' cut: lengths in metres
         self.cap_shade, self.hairline_up, self.hairline_exp, self.tint = cap_shade, hairline_up, hairline_exp, tint
+        self.frame, self.comb_back = frame, comb_back          # degrees kept clear of the face; how far the front is swept back
+        self.wave, self.wave_len, self.shine = wave, wave_len, shine    # soft waves (fraction of the width), their length, gloss
         self.taper = taper                                      # fraction the drape narrows by toward the ends
         self.color = color                                       # linear RGB; overrides melanin (for grey/white/dyed hair)
 
@@ -139,7 +141,7 @@ def grow(body, eye, style, name="hair"):
         backness = max(0.0, (p - c).y) / 0.1
         cut_here = cut + style.back_shorter * min(1.0, backness) + rnd.gauss(0, 0.004)
         z_eq = c.z - 0.005                                 # the skull's widest line, about ear-top height
-        front, keep_clear = -math.pi / 2, math.radians(58)
+        front, keep_clear = -math.pi / 2, math.radians(style.frame)
 
         def drape_point(q, rho_min):
             r = q - c
@@ -161,7 +163,7 @@ def grow(body, eye, style, name="hair"):
             if style.fringe and frontness > 0.6 and topness > 0.3:
                 want = Vector((side * 0.3, -1.0, -0.6))
             if not style.fringe and rel.y < 0.0 and abs(p.x) < radii.x + 0.004:
-                want = Vector((side * 0.8, 0.65, -0.3 * (1 - topness) - 0.05))
+                want = Vector((side * 0.8, style.comb_back, -0.3 * (1 - topness) - 0.05))
             d = want.normalized()
             if dist is not None and dist < 0.03:
                 d = (d - n * d.dot(n)).normalized()      # slide along the surface
@@ -178,6 +180,7 @@ def grow(body, eye, style, name="hair"):
             pts.append(p.copy())
         # phase 2: drape
         _, theta, rho0 = drape_point(p, 1.0 + gap / radii.x)
+        theta0 = theta
         span = max(0.02, z_eq - cut_here)
         z = p.z
         while z > cut_here + style.curl_under:
@@ -186,6 +189,10 @@ def grow(body, eye, style, name="hair"):
             bulge = style.hang_volume / radii.x * math.sin(math.pi * min(1.0, f * 1.4))   # fullest near the jaw
             theta += rnd.gauss(0, 0.0025)
             rho = (rho0 + bulge) * (1.0 - style.taper * f)
+            if style.wave:                                  # neighbouring strands wave together: phase follows the angle
+                ph = 2 * math.pi * (z_eq - z) / style.wave_len + theta0 * 2.6
+                rho *= 1.0 + style.wave * math.sin(ph)
+                theta += style.wave * 0.035 * math.cos(ph) * (style.step / 0.005)
             q = Vector((c.x + math.cos(theta) * radii.x * rho, c.y + math.sin(theta) * radii.y * rho, z))
             loc, n, _, dist = bvh.find_nearest(q)
             if dist is not None and dist < gap:            # jaw and neck must not poke through
@@ -284,7 +291,9 @@ def grow(body, eye, style, name="hair"):
         h.inputs["Melanin Redness"].default_value = style.redness
     if style.tint is not None and "Tint" in h.inputs:
         h.inputs["Tint"].default_value = (*style.tint, 1.0)
-    h.inputs["Roughness"].default_value = 0.3
+    if style.shine and "Coat" in h.inputs:
+        h.inputs["Coat"].default_value = style.shine
+    h.inputs["Roughness"].default_value = 0.3 - 0.12 * style.shine
     h.inputs["Radial Roughness"].default_value = 0.45
     for key, val in (("Random Color", 0.12), ("Random Roughness", 0.15)):
         if key in h.inputs:
