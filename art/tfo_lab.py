@@ -34,7 +34,7 @@ rnd = random.Random(7)
 
 
 # --- strand hair -------------------------------------------------------------------------------
-def strand_hair(card_obj, melanin=0.6, redness=0.95, per_gap=700, layers=3, thickness=0.012):
+def strand_hair(card_obj, melanin=0.6, redness=0.95, per_gap=700, layers=3, thickness=0.012, radius=0.00009):
     """Grow real strands along a MakeHuman hair shell.
 
     The shell's UV layout is a grid whose columns run root to tip, so each column of vertices is a strand
@@ -104,8 +104,9 @@ def strand_hair(card_obj, melanin=0.6, redness=0.95, per_gap=700, layers=3, thic
             t = rnd.random()
             depth = rnd.random() ** 1.5                       # more strands near the surface
             layer_off = depth * thickness
-            jit = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 1))) * 0.0012
+            jit = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 1))) * (0.0012 if rnd.random() > 0.03 else 0.006)  # a few flyaways
             tip_len = rnd.uniform(0.88, 1.0)                   # uneven ends
+            phase, amp = rnd.uniform(0, 6.283), rnd.uniform(0.0002, 0.0012)   # each strand waves its own way
             pts = []
             for k in range(N):
                 if k / (N - 1) > tip_len:
@@ -113,7 +114,7 @@ def strand_hair(card_obj, melanin=0.6, redness=0.95, per_gap=700, layers=3, thic
                 p = c[k][0].lerp(d[k][0], t)
                 n = c[k][1].lerp(d[k][1], t).normalized()
                 s_ = k / (N - 1)
-                wave = math.sin(s_ * 9.0 + t * 6.0) * 0.0008
+                wave = math.sin(s_ * 7.0 + phase) * amp
                 pts.append(p + n * (layer_off + 0.0008) + jit * (0.3 + s_) + n * wave)
             if len(pts) >= 4:
                 strands.append(pts)
@@ -127,7 +128,7 @@ def strand_hair(card_obj, melanin=0.6, redness=0.95, per_gap=700, layers=3, thic
     radii = []
     for s in strands:
         for k in range(len(s)):
-            radii.append(0.00009 * (1.0 - 0.6 * k / len(s)))
+            radii.append(radius * (1.0 - 0.7 * k / len(s)))
     rad.data.foreach_set("value", radii)
     obj = bpy.data.objects.new("strand_hair", curves)
     bpy.context.scene.collection.objects.link(obj)

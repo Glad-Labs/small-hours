@@ -49,10 +49,87 @@ for o in list(bpy.data.objects):
     if o.name.endswith(".001"):
         bpy.data.objects.remove(o, do_unlink=True)
 
+# --- our own auto-fit: what Daz Studio does when a character shape changes -------------------------------
+# The character's shape arrives as shape keys over the default Genesis 9 body. Every separate piece
+# (clothes, lashes, brows, eyes, teeth) was modelled for the default body, so move each of its points by
+# however much the skin under it moved. Eyeballs and teeth move as rigid blocks so they keep their shape.
+def auto_fit(body, followers):
+    from mathutils.bvhtree import BVHTree
+    keys = body.data.shape_keys
+    if not keys:
+        return
+    basis = [v.co.copy() for v in keys.key_blocks["Basis"].data]
+    dg = bpy.context.evaluated_depsgraph_get()
+    em = body.evaluated_get(dg).to_mesh()
+    morphed = [v.co.copy() for v in em.vertices]
+    body.evaluated_get(dg).to_mesh_clear()
+    polys = [tuple(p.vertices) for p in body.data.polygons]
+    tree_basis = BVHTree.FromPolygons(basis, polys)
+    tree_morph = BVHTree.FromPolygons(morphed, polys)
+    to_body = body.matrix_world.inverted()
+
+    def displacement(local):
+        hit = tree_basis.find_nearest(local)
+        if hit[0] is None:
+            return Vector((0, 0, 0))
+        _, _, fi, _ = hit
+        idx = polys[fi]
+        ws = [1.0 / max((basis[i] - local).length, 1e-6) for i in idx]
+        tot = sum(ws)
+        return sum(((morphed[i] - basis[i]) * (w / tot) for i, w in zip(idx, ws)), Vector((0, 0, 0)))
+
+    for ob, rigid in followers:
+        if ob is None:
+            continue
+        mw = ob.matrix_world
+        pts = [to_body @ (mw @ v.co) for v in ob.data.vertices]
+        # Already fitted? Compare how snugly it sits on each version of the body.
+        sample = pts[:: max(1, len(pts) // 400)]
+        d_basis = sum((tree_basis.find_nearest(p)[3] or 0) for p in sample) / len(sample)
+        d_morph = sum((tree_morph.find_nearest(p)[3] or 0) for p in sample) / len(sample)
+        if d_morph < d_basis * 0.8:
+            print("FIT skip (already fitted)", ob.name)
+            continue
+        if rigid:
+            groups = {}
+            for i, p in enumerate(pts):
+                groups.setdefault(p.x > 0 if rigid == "pair" else 0, []).append(i)
+            disp = [None] * len(pts)
+            for g, idxs in groups.items():
+                c = sum((pts[i] for i in idxs), Vector((0, 0, 0))) / len(idxs)
+                d = displacement(c)
+                for i in idxs:
+                    disp[i] = d
+        else:
+            disp = [displacement(p) for p in pts]
+        inv = (to_body @ mw).inverted().to_3x3()        # body-space offsets back into the piece's own space
+        offs = [inv @ d for d in disp]
+        blocks = ob.data.shape_keys.key_blocks if ob.data.shape_keys else None
+        for i, v in enumerate(ob.data.vertices):
+            v.co += offs[i]
+        if blocks:
+            for kb in blocks:
+                for i, pt in enumerate(kb.data):
+                    pt.co += offs[i]
+        ob.data.update()
+        print("FIT moved %s (%s), mean shift %.1f mm" % (ob.name, rigid or "soft", 1000 * sum(d.length for d in disp) / len(disp)))
+
+
 meshes = [o for o in bpy.data.objects if o.type == "MESH"]
 for o in bpy.context.view_layer.objects:
     o.select_set(o.type == "MESH")
 body = next(o for o in meshes if o.name.startswith("%s for Genesis 9" % name))
+auto_fit(body, [(o, "pair" if "Eyes" in o.name else ("block" if "Mouth" in o.name else None))
+                for o in meshes if o is not body])
+# Clothes made for a slimmer figure can still sit partly inside the skin: push those parts just outside it.
+for o in meshes:
+    if "Shirt" in o.name or "Shorts" in o.name:
+        m = o.modifiers.new("stay_outside_skin", "SHRINKWRAP")
+        m.target = body
+        m.wrap_method = "NEAREST_SURFACEPOINT"
+        m.wrap_mode = "OUTSIDE"
+        m.offset = 0.003
+        o.modifiers.move(o.modifiers.find("stay_outside_skin"), 0) if hasattr(o.modifiers, "move") else None
 bpy.context.view_layer.objects.active = body
 def apply_preset(preset, target):
     if not os.path.exists(preset) or target is None:
@@ -193,6 +270,99 @@ for m in bpy.data.materials:
     imgs = [n.image.name for n in m.node_tree.nodes if n.type == "TEX_IMAGE" and n.image] if m.node_tree else []
     if any(k in m.name for k in ("Eye", "Iris", "Sclera", "Lash", "Head")):
         print("MAT", m.name, len(imgs), imgs[:4])
+
+
+# --- our own hair: a MakeHuman hairstyle shell, wrapped onto the Daz head, grown into real strands ---------
+def head_metrics(ob):
+    pts = [ob.matrix_world @ v.co for v in ob.data.vertices]
+    top = max(p.z for p in pts)
+    band = [p for p in pts if top - 0.15 < p.z < top - 0.05]
+    cap = [p for p in pts if p.z > top - 0.10]
+    return top, max(p.x for p in band) - min(p.x for p in band), sum(p.y for p in cap) / len(cap)
+
+
+if "--bob" in args:
+    os.environ["TFO_PEOPLE_IMPORT"] = "1"
+    import tfo_lab
+    import tfo_people
+    before = set(bpy.data.objects)
+    bpy.ops.wm.obj_import(filepath="/store/asset-library/mpfb/data/hair/toigo_curled_under_bob/bob_curled_under.obj")
+    shell = next(o for o in bpy.data.objects if o not in before and o.type == "MESH")
+    shell.scale = (0.1, 0.1, 0.1)                       # MakeHuman works in decimetres
+    bpy.context.view_layer.update()
+    bpy.context.view_layer.objects.active = shell
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == shell)
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+    htop, hwidth, hy = head_metrics(body)
+    stop, swidth, sy = head_metrics(shell)
+    k = (hwidth + 0.014) / swidth                      # the shell sits about 7 mm off each side of the head
+    shell.scale = (k, k, k)
+    bpy.context.view_layer.update()
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    stop, swidth, sy = head_metrics(shell)
+    shell.location = (0.0, hy - sy, htop + 0.006 - stop)
+    bpy.context.view_layer.update()
+    bpy.ops.object.transform_apply(location=True, rotation=False, scale=False)
+    # Real hair lies on the crown and only gains volume lower down: pull the top of the shell onto the scalp,
+    # fading back to the hairstyle's own shape between the temples and the ears.
+    crown = shell.vertex_groups.new(name="crown")
+    for v in shell.data.vertices:
+        z = (shell.matrix_world @ v.co).z
+        w = min(1.0, max(0.0, (z - (htop - 0.19)) / 0.12)) ** 1.5
+        if w > 0:
+            crown.add([v.index], w, "REPLACE")
+    hug = shell.modifiers.new("hug_crown", "SHRINKWRAP")
+    hug.target = body
+    hug.wrap_method = "NEAREST_SURFACEPOINT"
+    hug.wrap_mode = "ON_SURFACE"
+    hug.offset = 0.0035
+    hug.vertex_group = "crown"
+    wrap = shell.modifiers.new("keep_off_scalp", "SHRINKWRAP")
+    wrap.target = body
+    wrap.wrap_method = "NEAREST_SURFACEPOINT"
+    wrap.wrap_mode = "OUTSIDE"
+    wrap.offset = 0.004                                 # never closer than 4 mm to the skin
+    print("BOB fitted: head width %.3f, scale %.3f" % (hwidth, k))
+    tfo_lab.strand_hair(shell, melanin=0.75, redness=0.8, per_gap=1500, thickness=0.008, radius=0.00006)
+    cap = bpy.data.materials.new("hair_cap")
+    cap.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = lib.rgb("#4a2716")
+    cap.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.6
+    shell.data.materials.clear()
+    shell.data.materials.append(cap)
+
+# --- a knitted look for the shirt -----------------------------------------------------------------------
+if "--knit" in args and find("Shirt"):
+    knit = bpy.data.materials.new("knit")
+    nt = knit.node_tree
+    b = nt.nodes["Principled BSDF"]
+    b.inputs["Base Color"].default_value = lib.rgb("#7f8c6c")
+    b.inputs["Roughness"].default_value = 0.88
+    if "Sheen Weight" in b.inputs:
+        b.inputs["Sheen Weight"].default_value = 0.4
+    ribs = nt.nodes.new("ShaderNodeTexWave")
+    ribs.bands_direction = "X"
+    ribs.inputs["Scale"].default_value = 90.0
+    ribs.inputs["Distortion"].default_value = 2.0
+    fuzz = nt.nodes.new("ShaderNodeTexNoise")
+    fuzz.inputs["Scale"].default_value = 600.0
+    mix = nt.nodes.new("ShaderNodeMath")
+    mix.operation = "ADD"
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.35
+    nt.links.new(ribs.outputs["Fac"], mix.inputs[0])
+    nt.links.new(fuzz.outputs["Fac"], mix.inputs[1])
+    nt.links.new(mix.outputs[0], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+    for shirt in [o for o in bpy.data.objects if o.type == "MESH" and "Shirt" in o.name]:
+        shirt.data.materials.clear()
+        shirt.data.materials.append(knit)
+        for poly in shirt.data.polygons:
+            poly.material_index = 0
+        print("KNIT on", shirt.name)
+    for o in bpy.data.objects:
+        if o.type == "MESH" and any(sl.material and ("Shirt" in sl.material.name or "Trim" in sl.material.name) for sl in o.material_slots):
+            print("KNIT still-shirt-material on", o.name, [sl.material.name for sl in o.material_slots])
 
 bpy.context.view_layer.update()
 zs = [(body.matrix_world @ Vector(c)).z for c in body.bound_box]
