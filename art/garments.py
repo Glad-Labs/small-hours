@@ -47,7 +47,7 @@ def _skin_positions(body):
 
 
 def build(body, parts, name, offset=0.006, smooth_iters=12, thickness=0.0025, keep=None, band_width=0.03,
-          planes=()):
+          planes=(), boundary_smooth=12):
     """Make a garment mesh from the body faces whose vertices all belong to `parts`.
 
     keep(position) -> bool can trim further (hem height, neckline, V-neck). Returns the new object; its
@@ -74,6 +74,16 @@ def build(body, parts, name, offset=0.006, smooth_iters=12, thickness=0.0025, ke
         bm.edges.remove(e)
     for v in [v for v in bm.verts if not v.link_edges]:
         bm.verts.remove(v)
+    # Cut edges inherit the body mesh's zigzag; relax each boundary vertex toward its boundary neighbours.
+    for _ in range(boundary_smooth):
+        moves = {}
+        for v in bm.verts:
+            if v.is_boundary:
+                nb = [e.other_vert(v) for e in v.link_edges if e.is_boundary]
+                if len(nb) == 2:
+                    moves[v] = (nb[0].co + nb[1].co) / 2 * 0.6 + v.co * 0.4
+        for v, c in moves.items():
+            v.co = c
     # Fabric does not follow every dip of the body: smooth the surface, then keep it outside the skin.
     for _ in range(smooth_iters):
         bmesh.ops.smooth_vert(bm, verts=[v for v in bm.verts if not v.is_boundary], factor=0.5,
@@ -193,29 +203,29 @@ def sweater(body, colour="#7f8c6c", neck_z=None, hem_z=None):
     return ob
 
 
-def shirt(body, colour="#ece8e0", neck_z=None, hem_z=None):
+def shirt(body, colour="#7d7769", neck_z=None, hem_z=None):
     planes, keep = _neck_hem(neck_z, hem_z, dip=0.15)
-    ob = build(body, TORSO + SHOULDERS + UPPER_ARMS + FOREARMS + NECK, "shirt", offset=0.004, smooth_iters=10,
+    ob = build(body, TORSO + SHOULDERS + UPPER_ARMS + FOREARMS + NECK, "shirt", offset=0.011, smooth_iters=18,
                thickness=0.0015, keep=keep, band_width=0.02, planes=planes)
     _assign(ob, _fabric("cotton", colour, rib_scale=900.0, rib_strength=0.05, band_rib_scale=900.0, rough=0.6,
-                        sheen=0.2, fuzz=1500.0))
+                        sheen=0.05, fuzz=1500.0))
     return ob
 
 
-def waistcoat(body, colour="#9aa0a6", v_bottom_z=None, hem_z=None, buttons=5):
+def waistcoat(body, colour="#4d535a", v_bottom_z=None, hem_z=None, buttons=5):
     """A sleeveless V-neck waistcoat in fine wool, worn over the shirt, with a row of buttons."""
     def keep(p):
         if hem_z is not None and p.z < hem_z:
             return False
         if v_bottom_z is not None and p.y < -0.02:
             # the V: open in front above a line rising from the V's point toward the shoulders
-            if p.z > v_bottom_z + abs(p.x) * 2.2:
+            if p.z > v_bottom_z + abs(p.x) * 3.4:
                 return False
         return True
     ob = build(body, TORSO + SHOULDERS, "waistcoat", offset=0.011, smooth_iters=16, thickness=0.003, keep=keep,
                band_width=0.012)
     _assign(ob, _fabric("waistcoat_wool", colour, rib_scale=700.0, rib_strength=0.15, band_rib_scale=700.0,
-                        rough=0.55, sheen=0.3, fuzz=1200.0))
+                        rough=0.55, sheen=0.05, fuzz=1200.0))
     if v_bottom_z is not None and hem_z is not None and buttons:
         btn = lib.material("button", "#2a2826", rough=0.25, metal=0.2)
         me = ob.data
@@ -226,3 +236,49 @@ def waistcoat(body, colour="#9aa0a6", v_bottom_z=None, hem_z=None, buttons=5):
             y = min(p.y for p in near) - 0.003 if near else -0.12
             lib.cylinder("button", 0.0055, 0.003, (0.0, y, z), btn, rot=(math.pi / 2, 0, 0))
     return ob
+
+
+LEGS = ("pelvis", "l_thightwist1", "l_thightwist2", "r_thightwist1", "r_thightwist2")
+
+
+def _hull_object(points, name, offset, mat):
+    """A closed solid around a point cloud: its convex hull, pushed outward along the normals by `offset`."""
+    bm = bmesh.new()
+    for pt in points:
+        bm.verts.new(pt)
+    res = bmesh.ops.convex_hull(bm, input=bm.verts, use_existing_faces=False)
+    stray = list({v for v in res["geom_interior"] + res.get("geom_unused", []) if isinstance(v, bmesh.types.BMVert)})
+    bmesh.ops.delete(bm, geom=stray, context="VERTS")
+    bm.normal_update()
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    for v in bm.verts:
+        v.co += v.normal * offset
+    me = bpy.data.meshes.new(name)
+    bm.to_mesh(me)
+    bm.free()
+    ob = bpy.data.objects.new(name, me)
+    bpy.context.scene.collection.objects.link(ob)
+    sub = ob.modifiers.new("round_off", "SUBSURF")
+    sub.levels = 2
+    sub.render_levels = 2
+    for p in me.polygons:
+        p.use_smooth = True
+    me.materials.append(mat)
+    return ob
+
+
+def trousers(body, colour="#2d3238", top_z=None, bottom_z=None, offset=0.016):
+    """Tailored trousers: one convex hull per leg, so the cloth bridges the crotch and falls straight instead of
+    clinging to the skin. Top and bottom heights bound the hulls."""
+    dom = _dominant_groups(body)
+    pos, _ = _skin_positions(body)
+    pts = [pos[i] for i, g in enumerate(dom) if g in LEGS
+           and (top_z is None or pos[i].z <= top_z) and (bottom_z is None or pos[i].z >= bottom_z)]
+    mat = _fabric("trouser_wool", colour, rib_scale=700.0, rib_strength=0.1, band_rib_scale=700.0,
+                  rough=0.6, sheen=0.05, fuzz=1200.0)
+    obs = []
+    for sign, nm in ((-1, "trouser_leg_L"), (1, "trouser_leg_R")):
+        half = [p for p in pts if p.x * sign >= -0.012]            # each leg's hull includes a little of the middle
+        obs.append(_hull_object(half, nm, offset, mat))
+    print("GARMENT trousers: %d points" % len(pts))
+    return obs

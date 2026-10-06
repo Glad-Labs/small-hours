@@ -22,13 +22,19 @@ from mathutils.bvhtree import BVHTree
 class Style:
     def __init__(self, cut="bob", part_x=0.008, length_z=None, strands=30000, clumps=900, step=0.005,
                  melanin=0.86, redness=0.5, radius=0.00005, lift=0.003, volume=0.006, hang_volume=0.012,
-                 curl_under=0.02, back_shorter=0.015, fringe=False, seed=11):
+                 curl_under=0.02, back_shorter=0.015, fringe=False, seed=11,
+                 top_len=0.055, side_len=0.014, sweep=0.9, cap_shade=None, hairline_up=0.0, hairline_exp=1.35,
+                 tint=None, color=None, taper=0.0):
         self.cut, self.part_x, self.length_z = cut, part_x, length_z
         self.strands, self.clumps, self.step = strands, clumps, step
         self.melanin, self.redness, self.radius = melanin, redness, radius
         self.lift, self.volume, self.hang_volume = lift, volume, hang_volume
         self.curl_under, self.back_shorter, self.fringe = curl_under, back_shorter, fringe
         self.seed = seed
+        self.top_len, self.side_len, self.sweep = top_len, side_len, sweep      # 'crop' cut: lengths in metres
+        self.cap_shade, self.hairline_up, self.hairline_exp, self.tint = cap_shade, hairline_up, hairline_exp, tint
+        self.taper = taper                                      # fraction the drape narrows by toward the ends
+        self.color = color                                       # linear RGB; overrides melanin (for grey/white/dyed hair)
 
 
 def _surface(body):
@@ -45,12 +51,12 @@ def _surface(body):
     return verts, tris, BVHTree.FromPolygons(verts, tris)
 
 
-def _hairline(eye, c, p, fringe):
+def _hairline(eye, c, p, fringe, up=0.0, exp=1.35):
     """Height of the hairline at the head azimuth of point p: forehead high, temples lower, nape lowest."""
     r = p - c
     a = abs(math.atan2(r.x, -r.y)) / math.pi            # 0 = straight ahead, 1 = straight behind
-    front = eye.z + (0.06 if fringe else 0.077)
-    return front - (front - (eye.z - 0.065)) * (a ** 1.35)
+    front = eye.z + (0.06 if fringe else 0.077) + up
+    return front - (front - (eye.z - 0.065)) * (a ** exp)
 
 
 def grow(body, eye, style, name="hair"):
@@ -65,9 +71,12 @@ def grow(body, eye, style, name="hair"):
         m = (a + b + d) / 3
         if (m - c).length > 0.15 or m.z < eye.z - 0.09:
             continue
-        if m.z < _hairline(eye, c, m, style.fringe):
+        if m.z < _hairline(eye, c, m, style.fringe, style.hairline_up, style.hairline_exp) - 0.012:
             continue
-        if abs(m.x) > 0.072 and m.z < eye.z + 0.03:     # ears
+        if style.cut == "crop":                         # ears: a box around them, not the whole side of the head
+            if abs(m.x) > 0.066 and abs(m.y - c.y) < 0.05 and eye.z - 0.07 < m.z < eye.z + 0.03:
+                continue
+        elif abs(m.x) > 0.072 and m.z < eye.z + 0.03:   # ears
             continue
         area = (b - a).cross(d - a).length / 2
         scalp.append((a, b, d))
@@ -92,7 +101,12 @@ def grow(body, eye, style, name="hair"):
         u, v = rnd.random(), rnd.random()
         if u + v > 1:
             u, v = 1 - u, 1 - v
-        return a + (b - a) * u + (d - a) * v
+        q = a + (b - a) * u + (d - a) * v
+        # feathered hairline: the line is a soft edge, thinning out over about 12 mm instead of stopping dead
+        edge = q.z - _hairline(eye, c, q, style.fringe, style.hairline_up, style.hairline_exp)
+        if edge < 0.0 and rnd.random() > (edge + 0.012) / 0.012 * 0.55:
+            return sample_root()
+        return q
 
     top = max(p.z for tri in scalp for p in tri)
     # A smooth egg around skull and ears: hair drapes over it instead of tracing the ears, so no ledge.
@@ -171,7 +185,7 @@ def grow(body, eye, style, name="hair"):
             f = max(0.0, min(1.0, (z_eq - z) / span))
             bulge = style.hang_volume / radii.x * math.sin(math.pi * min(1.0, f * 1.4))   # fullest near the jaw
             theta += rnd.gauss(0, 0.0025)
-            rho = rho0 + bulge
+            rho = (rho0 + bulge) * (1.0 - style.taper * f)
             q = Vector((c.x + math.cos(theta) * radii.x * rho, c.y + math.sin(theta) * radii.y * rho, z))
             loc, n, _, dist = bvh.find_nearest(q)
             if dist is not None and dist < gap:            # jaw and neck must not poke through
@@ -186,13 +200,52 @@ def grow(body, eye, style, name="hair"):
             pts.append(p.copy())
         return pts
 
+
+    def crop_strand(root):
+        """A short cut: no drape. Length depends on where the root is (long on top, short at the sides and back);
+        the top is swept back and to the side of the parting with a little lift, the sides lie down and back."""
+        side = 1.0 if root.x >= style.part_x else -1.0
+        topness = max(0.0, min(1.0, (root.z - (eye.z + 0.025)) / (top - (eye.z + 0.025) + 1e-6)))
+        frontness = max(0.0, -(root - c).y) / 0.1
+        length = style.side_len + (style.top_len - style.side_len) * topness ** 1.3 + rnd.gauss(0, 0.003)
+        length = max(0.008, length)
+        p = root.copy()
+        _, n, _, _ = bvh.find_nearest(p)
+        p = p + n * 0.0015
+        pts = [p.copy()]
+        walked = 0.0
+        while walked < length:
+            loc, n, _, dist = bvh.find_nearest(p)
+            t = walked / length
+            if topness > 0.25:
+                lift = (0.15 + 0.6 * frontness) * (1 - t * 0.4)
+                want = Vector((side * 0.45, style.sweep, lift))
+            else:
+                want = Vector((side * 0.4, 0.35, -1.0))
+            d = want.normalized()
+            if dist is not None and dist < 0.03 and topness <= 0.25:
+                d = (d - n * d.dot(n)).normalized()
+            elif dist is not None and dist < 0.012:
+                d = ((d - n * d.dot(n)) * 0.8 + n * 0.2 * (1 + frontness)).normalized()
+            p = p + d * style.step
+            walked += style.step
+            loc, n, _, dist = bvh.find_nearest(p)
+            gap = style.lift + (style.volume * topness) * (walked / max(length, 1e-6)) ** 0.7
+            if dist is not None and dist < gap:
+                p = loc + n * gap
+            pts.append(p.copy())
+        if len(pts) < 4:                                   # very short sides: pad with one more sample
+            pts.append(pts[-1] + (pts[-1] - pts[-2]))
+        return pts
+
+    make = crop_strand if style.cut == "crop" else strand
     # --- clump guides first, then every strand blends toward its nearest guide toward the tip
     roots = [sample_root() for _ in range(style.strands)]
     guide_roots = [sample_root() for _ in range(style.clumps)]
-    guides = [strand(r) for r in guide_roots]
+    guides = [make(r) for r in guide_roots]
     out = []
     for r in roots:
-        s = strand(r)
+        s = make(r)
         g = min(range(len(guides)), key=lambda i: (guide_roots[i] - r).length_squared)
         gd = guides[g]
         if len(gd) > 2:
@@ -222,9 +275,15 @@ def grow(body, eye, style, name="hair"):
     nt.nodes.clear()
     o = nt.nodes.new("ShaderNodeOutputMaterial")
     h = nt.nodes.new("ShaderNodeBsdfHairPrincipled")
-    h.parametrization = "MELANIN"
-    h.inputs["Melanin"].default_value = style.melanin
-    h.inputs["Melanin Redness"].default_value = style.redness
+    if style.color is not None:
+        h.parametrization = "COLOR"
+        h.inputs["Color"].default_value = (*style.color, 1.0)
+    else:
+        h.parametrization = "MELANIN"
+        h.inputs["Melanin"].default_value = style.melanin
+        h.inputs["Melanin Redness"].default_value = style.redness
+    if style.tint is not None and "Tint" in h.inputs:
+        h.inputs["Tint"].default_value = (*style.tint, 1.0)
     h.inputs["Roughness"].default_value = 0.3
     h.inputs["Radial Roughness"].default_value = 0.45
     for key, val in (("Random Color", 0.12), ("Random Roughness", 0.15)):
@@ -238,7 +297,7 @@ def grow(body, eye, style, name="hair"):
     cv, cf = [], []
     for (a, b, d) in scalp:
         m = (a + b + d) / 3
-        if m.z < _hairline(eye, c, m, style.fringe) + 0.006:   # keep the cap's edge under the hair
+        if m.z < _hairline(eye, c, m, style.fringe, style.hairline_up, style.hairline_exp) + 0.006:   # keep the cap's edge under the hair
             continue
         i = len(cv)
         for q in (a, b, d):
@@ -251,7 +310,7 @@ def grow(body, eye, style, name="hair"):
     cm = bpy.data.materials.new(name + "_cap_mat")
     cm.use_nodes = True   # new materials ignore their nodes otherwise
     b = cm.node_tree.nodes["Principled BSDF"]
-    shade = 0.02 + 0.05 * (1 - style.melanin)
+    shade = style.cap_shade if style.cap_shade is not None else 0.02 + 0.05 * (1 - style.melanin)
     b.inputs["Base Color"].default_value = (shade * (1 + 0.8 * style.redness), shade * 0.75, shade * 0.5, 1)
     b.inputs["Roughness"].default_value = 0.7
     cap_me.materials.append(cm)

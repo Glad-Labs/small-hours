@@ -247,7 +247,7 @@ for slot in (lashes.material_slots if lashes else []):
     cutout(slot.material, BASE + "Eyelashes/Genesis9_Eyelashes01_C.jpg", colour=(0.015, 0.01, 0.008, 1))
 brows = find("Eyebrows")
 for slot in (brows.material_slots if brows else []):
-    cutout(slot.material, BASE + "Eyebrows/OpacityCutout02_Thick.jpg", colour=(0.045, 0.028, 0.02, 1))
+    cutout(slot.material, BASE + "Eyebrows/OpacityCutout02_Thick.jpg", colour=((tuple(float(x) for x in args[args.index("--brow") + 1].split(",")) + (1,)) if "--brow" in args else (0.045, 0.028, 0.02, 1)))
 
 tear = find("Tear")
 for slot in (tear.material_slots if tear else []):
@@ -273,6 +273,44 @@ for m in bpy.data.materials:
     if any(k in m.name for k in ("Eye", "Iris", "Sclera", "Lash", "Head")):
         print("MAT", m.name, len(imgs), imgs[:4])
 
+
+# --- arms down: Daz characters arrive in an A-pose; rotate each upper arm until the arm hangs ---------------
+def lower_arms(rig, hang_deg=14.0):
+    for side in ("l", "r"):
+        ub = rig.pose.bones[side + "_upperarm"]
+        hand = rig.pose.bones[side + "_hand"]
+        ub.rotation_mode = "XYZ"
+
+        def reach():
+            bpy.context.view_layer.update()
+            return (rig.matrix_world @ hand.head) - (rig.matrix_world @ ub.head)
+        ub.rotation_euler = (0, 0, 0)
+        base = reach()
+        best = None
+        for axis in range(3):                              # which way does this bone swing the hand downward?
+            for sign in (1, -1):
+                e = [0.0, 0.0, 0.0]
+                e[axis] = sign * math.radians(30)
+                ub.rotation_euler = e
+                drop = base.z - reach().z
+                if best is None or drop > best[0]:
+                    best = (drop, axis, sign)
+        _, axis, sign = best
+        ang = 90.0
+        for deg in range(0, 91, 3):
+            e = [0.0, 0.0, 0.0]
+            e[axis] = sign * math.radians(deg)
+            ub.rotation_euler = e
+            v = reach()
+            ang = math.degrees(math.acos(max(-1.0, min(1.0, -v.z / v.length))))
+            if ang <= hang_deg:
+                break
+        print("ARMS %s axis %d sign %+d -> %d deg, arm now %.0f deg from vertical" % (side, axis, sign, deg, ang))
+
+
+if "--arms" in args:
+    lower_arms(next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name)),
+               hang_deg=float(args[args.index("--arms") + 1]))
 
 # --- our own hair: a MakeHuman hairstyle shell, wrapped onto the Daz head, grown into real strands ---------
 def head_metrics(ob):
@@ -343,8 +381,18 @@ if "--combbob" in args:
                if abs((body.matrix_world @ v.co).x) < 0.02 and (body.matrix_world @ v.co).y < eye_mid.y - 0.02
                and eye_mid.z - 0.16 < (body.matrix_world @ v.co).z < eye_mid.z)
     style = hairgen.Style(cut="bob", part_x=0.006, length_z=chin - 0.005,
-                          strands=50000 if fast else 90000, clumps=900 if fast else 1500)
+                          strands=50000 if fast else 90000, clumps=900 if fast else 1500, taper=0.16, hang_volume=0.006)
     hairgen.grow(body, eye_mid, style, name="nell_hair")
+
+if "--crop" in args:
+    import hairgen
+    e = find("Eyes")
+    ev = [e.matrix_world @ v.co for v in e.data.vertices]
+    eye_mid = sum(ev, Vector((0, 0, 0))) / len(ev)
+    style = hairgen.Style(cut="crop", part_x=0.025, strands=40000 if fast else 80000, clumps=1200 if fast else 2000,
+                          color=(0.012, 0.0125, 0.014), radius=0.00007, lift=0.0025, volume=0.012, hairline_exp=0.6,
+                          top_len=0.06, side_len=0.012, sweep=1.0, cap_shade=0.08, hairline_up=0.012, step=0.004)
+    hairgen.grow(body, eye_mid, style, name="webb_hair")
 
 # --- clothes made from the body (art/garments.py) ---------------------------------------------------------
 if "--sweater" in args or "--waistcoat" in args:
@@ -353,12 +401,19 @@ if "--sweater" in args or "--waistcoat" in args:
     e_o = find("Eyes")
     eye_z = sum((e_o.matrix_world @ v.co).z for v in e_o.data.vertices) / len(e_o.data.vertices)
     neck_z = eye_z - 0.145                  # a crew neckline just below the throat
-    hem_z = eye_z - 0.72                    # at the hips
+    hem_z = eye_z - 0.745                   # hip length: just below a sprite's bottom edge (eye - 0.73)
     if "--sweater" in args:
         garments.sweater(body, colour="#3f4d3c", neck_z=neck_z, hem_z=hem_z)
     if "--waistcoat" in args:
-        garments.shirt(body, neck_z=eye_z - 0.13, hem_z=hem_z - 0.04)
-        garments.waistcoat(body, colour="#a3a9b0", v_bottom_z=eye_z - 0.42, hem_z=eye_z - 0.64)
+        garments.shirt(body, neck_z=eye_z - 0.13, hem_z=hem_z)
+        garments.waistcoat(body, colour="#2d3238", v_bottom_z=eye_z - 0.36, hem_z=eye_z - 0.745)
+
+if "--trousers" in args:
+    import garments
+    e_o = find("Eyes")
+    eye_z = sum((e_o.matrix_world @ v.co).z for v in e_o.data.vertices) / len(e_o.data.vertices)
+    tcol = args[args.index("--trousers") + 1]
+    garments.trousers(body, colour=tcol, top_z=eye_z - 0.60, bottom_z=eye_z - 1.05)
 
 # --- a knitted look for the shirt -----------------------------------------------------------------------
 if "--knit" in args and find("Shirt"):
@@ -398,14 +453,16 @@ bpy.context.view_layer.update()
 # --- expression: Daz's FACS controls, the same face units the MakeHuman characters used ------------------
 EXPRESSIONS = {
     "neutral": {},
-    "calm": {"facs_ctrl_MouthSmile": 0.22, "facs_ctrl_CheekSquint": 0.12, "facs_ctrl_BrowInnerUp": 0.12,
-             "facs_ctrl_EyesSquint": 0.08},
-    "warm": {"facs_ctrl_MouthSmile": 0.55, "facs_ctrl_MouthSmileWiden": 0.15, "facs_ctrl_CheekSquint": 0.35,
-             "facs_ctrl_EyesSquint": 0.2, "facs_ctrl_BrowInnerUp": 0.15, "facs_ctrl_MouthDimple": 0.2},
-    "rattled": {"facs_ctrl_BrowInnerUp": 0.75, "facs_ctrl_EyeWide": 0.3, "facs_ctrl_MouthPress": 0.35,
-                "facs_ctrl_MouthFrown": 0.25},
-    "pressed": {"facs_ctrl_MouthSmile": 0.15, "facs_ctrl_MouthPress": 0.3, "facs_ctrl_EyesSquint": 0.3,
-                "facs_BrowDownLeft": 0.25, "facs_BrowDownRight": 0.2},
+    "calm": {"facs_ctrl_MouthSmile": 0.3, "facs_ctrl_CheekSquint": 0.15, "facs_ctrl_BrowInnerUp": 0.2,
+             "facs_ctrl_EyesSquint": 0.1},
+    "warm": {"facs_ctrl_MouthSmile": 0.95, "facs_ctrl_MouthSmileWiden": 0.45, "facs_ctrl_CheekSquint": 0.65,
+             "facs_ctrl_EyesSquint": 0.35, "facs_ctrl_BrowInnerUp": 0.25, "facs_ctrl_MouthDimple": 0.5},
+    "rattled": {"facs_ctrl_BrowInnerUp": 1.0, "facs_ctrl_EyeWide": 0.85, "facs_ctrl_MouthPress": 0.3,
+                "facs_ctrl_MouthFrown": 0.45, "facs_BrowOuterUpLeft": 0.5, "facs_BrowOuterUpRight": 0.5},
+    "charm": {"facs_ctrl_MouthSmile": 0.8, "facs_ctrl_MouthSmileWiden": 0.2, "facs_ctrl_CheekSquint": 0.45,
+              "facs_ctrl_EyesSquint": 0.22, "facs_BrowOuterUpLeft": 0.55, "facs_ctrl_BrowInnerUp": 0.15},
+    "pressed": {"facs_ctrl_MouthSmile": 0.1, "facs_ctrl_MouthPress": 0.6, "facs_ctrl_EyesSquint": 0.45,
+                "facs_BrowDownLeft": 0.6, "facs_BrowDownRight": 0.5, "facs_ctrl_JawClench": 0.3},
 }
 expr = args[args.index("--expr") + 1] if "--expr" in args else "calm"
 rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
@@ -438,12 +495,21 @@ lib.light("fill", "AREA", tuple(eye + Vector((math.sin(yaw) * 1.4 + 0.6, -1.2, -
 lib.light("rim", "AREA", tuple(eye + Vector((0.75, 0.9, 0.45))), 110, "#a9bcff", size=0.5, target=tuple(eye))
 lib.light("rim2", "AREA", tuple(eye + Vector((-0.8, 0.8, 0.35))), 55, "#ffd9b8", size=0.5, target=tuple(eye))
 lib.light("hair", "AREA", tuple(eye + Vector((0.0, 0.6, 1.1))), 18, "#fff0dc", size=0.9, target=tuple(eye))
-cam = lib.camera(tuple(eye + off), (eye.x, eye.y, eye.z - aim_drop), lens=85)
-cam.data.dof.use_dof = "--close" not in args
-cam.data.dof.focus_distance = (cam.location - eye).length
-cam.data.dof.aperture_fstop = 2.8
-w, h, spp = (540, 675, 96) if fast else (1080, 1350, 200)
-lib.setup_render(w, h, spp, transparent=False, exposure=0.0)
+sprite = "--sprite" in args
+if sprite:
+    # Same framing as the game's existing character sprites: orthographic, head and torso, 1050x1400, transparent.
+    cz = eye.z - 0.215
+    cam = lib.camera((eye.x + math.sin(yaw) * 5.0, eye.y - math.cos(yaw) * 5.0, cz), (eye.x, eye.y, cz), lens=50)
+    cam.data.type = "ORTHO"
+    cam.data.ortho_scale = 1.0           # head to hips: ends above the leg openings, so no trousers are needed
+    w, h, spp = (525, 700, 48) if fast else (1050, 1400, 160)
+else:
+    cam = lib.camera(tuple(eye + off), (eye.x, eye.y, eye.z - aim_drop), lens=85)
+    cam.data.dof.use_dof = "--close" not in args
+    cam.data.dof.focus_distance = (cam.location - eye).length
+    cam.data.dof.aperture_fstop = 2.8
+    w, h, spp = (540, 675, 96) if fast else (1080, 1350, 200)
+lib.setup_render(w, h, spp, transparent=sprite, exposure=-1.5)
 bpy.context.scene.render.threads_mode = "FIXED"
 bpy.context.scene.render.threads = 16
 lib.render(out)
@@ -560,3 +626,18 @@ if "--captest" in args:
 
 if "--vgdiag" in args:
     print("VG", sorted(vg.name for vg in body.vertex_groups)[:120])
+
+if "--hairmat" in args:
+    m = bpy.data.materials["webb_hair_mat"]
+    for n in m.node_tree.nodes:
+        if n.bl_idname == "ShaderNodeBsdfHairPrincipled":
+            print("HAIRMAT", n.parametrization, n.model, {i.name: (tuple(round(x, 3) for x in i.default_value) if hasattr(i.default_value, "__len__") else round(i.default_value, 3)) for i in n.inputs if hasattr(i, "default_value") and i.enabled})
+
+if "--vgdiag2" in args:
+    names = sorted(vg.name for vg in body.vertex_groups)
+    print("VG2", len(names), [n for n in names if not n.startswith(("l_", "r_")) or any(k in n for k in ("thigh", "shin", "upperarm", "forearm", "shoulder", "pectoral", "collar"))])
+
+
+if "--bones" in args:
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    print("BONES", [b.name for b in rig.pose.bones if any(k in b.name for k in ("upperarm", "forearm", "hand", "shoulder", "collar", "clavicle"))][:40])
