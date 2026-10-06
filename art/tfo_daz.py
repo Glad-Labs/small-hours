@@ -346,6 +346,20 @@ if "--combbob" in args:
                           strands=50000 if fast else 90000, clumps=900 if fast else 1500)
     hairgen.grow(body, eye_mid, style, name="nell_hair")
 
+# --- clothes made from the body (art/garments.py) ---------------------------------------------------------
+if "--sweater" in args or "--waistcoat" in args:
+    import garments
+    pts = [body.matrix_world @ v.co for v in body.data.vertices]
+    e_o = find("Eyes")
+    eye_z = sum((e_o.matrix_world @ v.co).z for v in e_o.data.vertices) / len(e_o.data.vertices)
+    neck_z = eye_z - 0.145                  # a crew neckline just below the throat
+    hem_z = eye_z - 0.72                    # at the hips
+    if "--sweater" in args:
+        garments.sweater(body, colour="#3f4d3c", neck_z=neck_z, hem_z=hem_z)
+    if "--waistcoat" in args:
+        garments.shirt(body, neck_z=eye_z - 0.13, hem_z=hem_z - 0.04)
+        garments.waistcoat(body, colour="#a3a9b0", v_bottom_z=eye_z - 0.42, hem_z=eye_z - 0.64)
+
 # --- a knitted look for the shirt -----------------------------------------------------------------------
 if "--knit" in args and find("Shirt"):
     knit = bpy.data.materials.new("knit")
@@ -543,3 +557,6 @@ if "--captest" in args:
     sc.render.resolution_x, sc.render.resolution_y = 270, 338
     sc.cycles.samples = 16
     lib.render(out.replace(".png", "_captest.png"))
+
+if "--vgdiag" in args:
+    print("VG", sorted(vg.name for vg in body.vertex_groups)[:120])
