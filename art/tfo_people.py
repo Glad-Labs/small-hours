@@ -200,7 +200,8 @@ def light_and_render(name, shoulder_z):
     lib.render(os.path.join(OUT, "%s_%s%s.png" % (who, name, "_fast" if fast else "")))
 
 
-p = PEOPLE[who]
-for pose_name in (p["poses"] if which == "all" else [which]):
-    sz = build(p, p["poses"][pose_name])
-    light_and_render(pose_name, sz)
+if __name__ == "__main__" and not os.environ.get("TFO_PEOPLE_IMPORT"):
+    p = PEOPLE[who]
+    for pose_name in (p["poses"] if which == "all" else [which]):
+        sz = build(p, p["poses"][pose_name])
+        light_and_render(pose_name, sz)
