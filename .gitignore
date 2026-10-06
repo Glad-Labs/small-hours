@@ -50,3 +50,7 @@ art/__pycache__/
 
 # exploratory scratch scripts
 art/_*.py
+
+# art experiments: scratch scripts and their renders
+art/_lab/
+art/out/lab/
