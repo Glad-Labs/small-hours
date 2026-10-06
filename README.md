@@ -1,13 +1,19 @@
-# ai-interrogation
+# Small Hours
 
-An experiment in putting a small local language model inside a Ren'Py visual novel, with no
-cloud API and no player-supplied key. The prototype is a one-room interrogation: you question a
-suspect, Elena Voss, in free text, and a bundled `llama.cpp` server voices her answers.
+A series of mystery games in which every case happens in one night, between dark and dawn. You
+question the suspects in your own words, and a small language model running on your own computer
+voices them: no cloud API, no player-supplied key. A Glad Labs project.
 
-Status: working prototype. It passes its automated tests headless and has been played through in a
-browser, but nobody has played it on a phone or in a desktop window yet. The art is realistic 3D rendered in
-Blender from CC0 assets: scanned props and materials from Poly Haven for the archive office, and an MPFB
-(MakeHuman) character for the suspect, all built by scripts in `art/`.
+| Folder | What it is |
+|---|---|
+| `ten-forty-one/` | **Small Hours: Ten Forty-One**, the first case. A storm, a bolted vault, a body in the wrong coat. Chapter 1 is playable on desktop (Windows, Linux, Mac packages) and on a phone. |
+| `orchard-street/` | The original one-room prototype with Elena Voss, where the approach was proven. |
+| `art/` | Blender scripts that build every background and character from free assets (Poly Haven, MakeHuman, Daz). |
+| `docs/` | Design, the episode formula and the story bible. |
+
+Status: Ten Forty-One's first chapter passes its automated tests headless and has been played on a phone.
+The Linux desktop package is tested; Windows and Mac packages are built but not yet tried on real machines.
+The art is realistic 3D rendered in Blender from free assets, all built by scripts in `art/`.
 
 ## The design in one paragraph
 
