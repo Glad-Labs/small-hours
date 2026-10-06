@@ -2,6 +2,7 @@
 
     blender -b --factory-startup --python daz_char.py -- <character name e.g. Laura> <out.png> [--fast] [--hair] [--shirt]
 """
+import math
 import os
 import sys
 import time
@@ -203,7 +204,8 @@ for slot in (eyes.material_slots if eyes else []):
     mu = nt.nodes.new("ShaderNodeMath"); mu.operation = "MULTIPLY_ADD"
     mu.inputs[1].default_value = K; mu.inputs[2].default_value = 0.25 - cx * K
     mv = nt.nodes.new("ShaderNodeMath"); mv.operation = "MULTIPLY_ADD"
-    mv.inputs[1].default_value = K; mv.inputs[2].default_value = 0.75 - cz * K
+    GAZE_DOWN = float(args[args.index("--gaze") + 1]) if "--gaze" in args else 0.0015   # metres
+    mv.inputs[1].default_value = K; mv.inputs[2].default_value = 0.75 - (cz - GAZE_DOWN) * K
     nt.links.new(sep.outputs["X"], mu.inputs[0])
     nt.links.new(sep.outputs["Z"], mv.inputs[0])
     comb = nt.nodes.new("ShaderNodeCombineXYZ")
@@ -326,14 +328,28 @@ if "--bob" in args:
     print("BOB fitted: head width %.3f, scale %.3f" % (hwidth, k))
     tfo_lab.strand_hair(shell, melanin=0.75, redness=0.8, per_gap=1500, thickness=0.008, radius=0.00006)
     cap = bpy.data.materials.new("hair_cap")
+    cap.use_nodes = True   # new materials ignore their nodes otherwise
     cap.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = lib.rgb("#4a2716")
     cap.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.6
     shell.data.materials.clear()
     shell.data.materials.append(cap)
 
+if "--combbob" in args:
+    import hairgen
+    e = find("Eyes")
+    ev = [e.matrix_world @ v.co for v in e.data.vertices]
+    eye_mid = sum(ev, Vector((0, 0, 0))) / len(ev)
+    chin = min((body.matrix_world @ v.co).z for v in body.data.vertices
+               if abs((body.matrix_world @ v.co).x) < 0.02 and (body.matrix_world @ v.co).y < eye_mid.y - 0.02
+               and eye_mid.z - 0.16 < (body.matrix_world @ v.co).z < eye_mid.z)
+    style = hairgen.Style(cut="bob", part_x=0.006, length_z=chin - 0.005,
+                          strands=50000 if fast else 90000, clumps=900 if fast else 1500)
+    hairgen.grow(body, eye_mid, style, name="nell_hair")
+
 # --- a knitted look for the shirt -----------------------------------------------------------------------
 if "--knit" in args and find("Shirt"):
     knit = bpy.data.materials.new("knit")
+    knit.use_nodes = True   # new materials ignore their nodes otherwise
     nt = knit.node_tree
     b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = lib.rgb("#7f8c6c")
@@ -365,21 +381,55 @@ if "--knit" in args and find("Shirt"):
             print("KNIT still-shirt-material on", o.name, [sl.material.name for sl in o.material_slots])
 
 bpy.context.view_layer.update()
-zs = [(body.matrix_world @ Vector(c)).z for c in body.bound_box]
-top = max(zs)
-eye = Vector((0, 0, top - 0.11))
-lib.world_gradient("#2a2f44", "#0d1018", strength=0.5)
-lib.light("key", "AREA", (eye.x - 1.1, eye.y - 1.4, eye.z + 0.6), 160, "#ffe0c4", size=1.4, target=tuple(eye))
-lib.light("fill", "AREA", (eye.x + 1.3, eye.y - 1.2, eye.z - 0.1), 35, "#b9c6ff", size=1.6, target=tuple(eye))
-lib.light("rim", "AREA", (eye.x + 0.9, eye.y + 1.1, eye.z + 0.5), 140, "#9fb4ff", size=0.6, target=tuple(eye))
-lib.light("hair", "AREA", (eye.x - 0.4, eye.y + 0.6, eye.z + 1.1), 60, "#ffe9d0", size=0.6, target=tuple(eye))
-dist, aim_drop = (0.45, 0.0) if "--close" in args else (1.25, 0.1)
-cam = lib.camera((eye.x + 0.04, eye.y - dist, eye.z + 0.02), (eye.x, eye.y, eye.z - aim_drop), lens=85)
+# --- expression: Daz's FACS controls, the same face units the MakeHuman characters used ------------------
+EXPRESSIONS = {
+    "neutral": {},
+    "calm": {"facs_ctrl_MouthSmile": 0.22, "facs_ctrl_CheekSquint": 0.12, "facs_ctrl_BrowInnerUp": 0.12,
+             "facs_ctrl_EyesSquint": 0.08},
+    "warm": {"facs_ctrl_MouthSmile": 0.55, "facs_ctrl_MouthSmileWiden": 0.15, "facs_ctrl_CheekSquint": 0.35,
+             "facs_ctrl_EyesSquint": 0.2, "facs_ctrl_BrowInnerUp": 0.15, "facs_ctrl_MouthDimple": 0.2},
+    "rattled": {"facs_ctrl_BrowInnerUp": 0.75, "facs_ctrl_EyeWide": 0.3, "facs_ctrl_MouthPress": 0.35,
+                "facs_ctrl_MouthFrown": 0.25},
+    "pressed": {"facs_ctrl_MouthSmile": 0.15, "facs_ctrl_MouthPress": 0.3, "facs_ctrl_EyesSquint": 0.3,
+                "facs_BrowDownLeft": 0.25, "facs_BrowDownRight": 0.2},
+}
+expr = args[args.index("--expr") + 1] if "--expr" in args else "calm"
+rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+if EXPRESSIONS.get(expr):
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == rig)
+    bpy.context.view_layer.objects.active = rig
+    bpy.ops.daz.import_facs()
+    for prop, val in EXPRESSIONS[expr].items():
+        try:
+            api.set_slider(rig, prop, val)
+        except Exception as e:
+            print("EXPR could not set", prop, str(e)[:80])
+    api.update_drivers(rig)
+    print("EXPR", expr)
+
+# --- portrait camera and lighting ------------------------------------------------------------------------
+bpy.context.view_layer.update()
+e_obj = find("Eyes")
+evs = [e_obj.matrix_world @ v.co for v in e_obj.data.vertices]
+eye = sum(evs, Vector((0, 0, 0))) / len(evs)
+yaw = math.radians(float(args[args.index("--yaw") + 1]) if "--yaw" in args else 18.0)   # three-quarter view
+dist, aim_drop = (0.45, 0.0) if "--close" in args else (1.3, 0.12)
+off = Vector((math.sin(yaw) * dist, -math.cos(yaw) * dist, 0.03))
+lib.world_gradient("#262b3d", "#0b0d14", strength=0.45)
+key_dir = Vector((-math.sin(yaw + 0.75), -math.cos(yaw + 0.75), 0))        # from the camera's left
+lib.light("key", "AREA", tuple(eye + key_dir * 1.3 + Vector((0, 0, 0.55))), 210, "#ffe2c8", size=1.1, target=tuple(eye))
+lib.light("fill", "AREA", tuple(eye + Vector((math.sin(yaw) * 1.4 + 0.6, -1.2, -0.15))), 28, "#c4ceff", size=1.8,
+          target=tuple(eye))
+lib.light("rim", "AREA", tuple(eye + Vector((0.75, 0.9, 0.45))), 110, "#a9bcff", size=0.5, target=tuple(eye))
+lib.light("rim2", "AREA", tuple(eye + Vector((-0.8, 0.8, 0.35))), 55, "#ffd9b8", size=0.5, target=tuple(eye))
+lib.light("hair", "AREA", tuple(eye + Vector((0.0, 0.6, 1.1))), 18, "#fff0dc", size=0.9, target=tuple(eye))
+cam = lib.camera(tuple(eye + off), (eye.x, eye.y, eye.z - aim_drop), lens=85)
 cam.data.dof.use_dof = "--close" not in args
 cam.data.dof.focus_distance = (cam.location - eye).length
 cam.data.dof.aperture_fstop = 2.8
 w, h, spp = (540, 675, 96) if fast else (1080, 1350, 200)
-lib.setup_render(w, h, spp, transparent=False, exposure=0.1)
+lib.setup_render(w, h, spp, transparent=False, exposure=0.0)
 bpy.context.scene.render.threads_mode = "FIXED"
 bpy.context.scene.render.threads = 16
 lib.render(out)
@@ -433,3 +483,63 @@ if "--frontuv" in args:
                 best[mname] = (w.y, tuple(round(x, 3) for x in uvl[li].uv), tuple(round(x, 3) for x in w))
     for k, v in best.items():
         print("FRONTUV", k, "front y %.3f uv %s at %s" % v)
+
+if "--facsdiag" in args:
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    for o in bpy.context.view_layer.objects:
+        o.select_set(o == rig)
+    bpy.context.view_layer.objects.active = rig
+    try:
+        print("FACS import", bpy.ops.daz.import_facs(), api.get_error_message()[:200])
+    except Exception as e:
+        print("FACS import failed", str(e)[:300])
+    for cat in ("Facs", "FacsDetails", "Expressions", "Units", "Standard", "Visemes", "Head"):
+        try:
+            ms = api.get_morphs(rig, cat)
+            print("FACS", cat, len(ms), " ".join(sorted(ms)) if ms else ms)
+        except Exception as e:
+            print("FACS", cat, "error", str(e)[:120])
+
+if "--hairdiag" in args:
+    sc = bpy.context.scene
+    sc.render.resolution_x, sc.render.resolution_y = 270, 338
+    sc.cycles.samples = 32
+    for o in bpy.data.objects:
+        if o.type in ("MESH", "CURVES") and ("hair" in o.name.lower()):
+            print("HAIRDIAG obj", o.type, o.name, [sl.material.name for sl in o.material_slots if sl.material])
+    hair_o = bpy.data.objects.get("nell_hair")
+    cap_o = bpy.data.objects.get("nell_hair_cap")
+    for label, hide in (("nohair", [hair_o]), ("nocap", [cap_o]), ("nodenoise", [])):
+        for o in hide:
+            if o:
+                o.hide_render = True
+        sc.cycles.use_denoising = label != "nodenoise"
+        lib.render(out.replace(".png", "_%s.png" % label))
+        for o in hide:
+            if o:
+                o.hide_render = False
+    sc.cycles.use_denoising = True
+
+if "--matdiag" in args:
+    for nm in ("nell_hair", "nell_hair_cap"):
+        o = bpy.data.objects.get(nm)
+        if not o:
+            continue
+        for sl in o.material_slots:
+            m = sl.material
+            print("MATDIAG", nm, "slot link", sl.link, "mat", m.name, "use_nodes", getattr(m, "use_nodes", None))
+            for n in m.node_tree.nodes:
+                vals = {i.name: tuple(round(x, 3) for x in i.default_value) if hasattr(i.default_value, "__len__") else round(i.default_value, 3)
+                        for i in n.inputs if hasattr(i, "default_value") and i.name in ("Base Color", "Melanin", "Melanin Redness", "Color", "Roughness")}
+                print("MATDIAG   node", n.bl_idname, vals)
+            print("MATDIAG   links", [(l.from_node.bl_idname, l.to_node.bl_idname, l.to_socket.name) for l in m.node_tree.links])
+
+if "--captest" in args:
+    cap_o = bpy.data.objects.get("nell_hair_cap")
+    cap_o.material_slots[0].material.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0, 1, 0, 1)
+    bpy.data.objects["nell_hair"].hide_render = True
+    print("CAPTEST faces", len(cap_o.data.polygons), "hide_render", cap_o.hide_render, "visible", cap_o.visible_get())
+    sc = bpy.context.scene
+    sc.render.resolution_x, sc.render.resolution_y = 270, 338
+    sc.cycles.samples = 16
+    lib.render(out.replace(".png", "_captest.png"))

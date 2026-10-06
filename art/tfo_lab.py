@@ -133,6 +133,7 @@ def strand_hair(card_obj, melanin=0.6, redness=0.95, per_gap=700, layers=3, thic
     obj = bpy.data.objects.new("strand_hair", curves)
     bpy.context.scene.collection.objects.link(obj)
     m = bpy.data.materials.new("hair_strands")
+    m.use_nodes = True   # new materials ignore their nodes otherwise
     nt = m.node_tree if m.node_tree else None
     if nt is None:
         m.use_nodes = True
