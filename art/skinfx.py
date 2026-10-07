@@ -260,3 +260,42 @@ def makeup(body, lm, amount=1.0, lip=(0.46, 0.08, 0.11), blush=(0.88, 0.30, 0.30
     out = _tint(nt, out, lip, nb.math("MULTIPLY", lip_mask, 0.62 * amount))
     nt.links.new(out, bsdf.inputs["Base Color"])
     return lip_mask
+
+
+def stubble(body, lm, amount=1.0, colour=(0.55, 0.52, 0.5)):
+    """A short grey-flecked beard shadow over the lower face: fine speckle, darkest on the chin, jaw and upper lip,
+    absent from the lips themselves, with a slightly raised grain."""
+    nt = _head_material(body).node_tree
+    bsdf, src = _base_color_source(nt)
+    nb = _Nodes(nt)
+    p = nb.P
+    nostril, chin = lm["l_nostril"], lm["chin"]
+    lip_up, lip_lo = lm["lipuppermiddle"], lm["liplowermiddle"]
+    # The beard area: below the cheekbones, around and below the mouth, along the jaw, blending out over the cheeks.
+    cheek_z = lm["l_cheek"].z
+    lower = nb.mapr(nb.vmath("DOT_PRODUCT", p, (0.0, 0.0, 1.0)), chin.z - 0.012, cheek_z + 0.005, 1.0, 0.0)
+    wide = nb.mapr(nb.math("ABSOLUTE", nb.vmath("DOT_PRODUCT", p, (1.0, 0.0, 0.0))), 0.052, 0.07, 1.0, 0.0)
+    jaw_edge = nb.mapr(nb.vmath("DOT_PRODUCT", p, (0.0, 0.0, 1.0)), chin.z - 0.05, chin.z - 0.014, 0.0, 1.0)
+    area = nb.math("MULTIPLY", nb.math("MULTIPLY", lower, wide), jaw_edge)
+    # Not on the lips: carve out the mouth.
+    lips = nb.blob(p, (0.0, lip_up.y, (lip_up.z + lip_lo.z) / 2), (0.030, 1.0, 0.0105), sharp=0.55)
+    area = nb.math("MULTIPLY", area, nb.math("SUBTRACT", 1.0, lips))
+    # The speckle itself: each noise cell is a hair. Threshold two scales of noise for a fine, uneven grain.
+    grain = nt.nodes.new("ShaderNodeTexNoise")
+    grain.inputs["Scale"].default_value = 900.0
+    grain.inputs["Detail"].default_value = 0.0
+    grain.inputs["Roughness"].default_value = 1.0
+    nt.links.new(p, grain.inputs["Vector"])
+    patch = nt.nodes.new("ShaderNodeTexNoise")
+    patch.inputs["Scale"].default_value = 18.0
+    nt.links.new(p, patch.inputs["Vector"])
+    fleck = nb.mapr(grain.outputs["Fac"], 0.42, 0.58, 0.0, 1.0, smooth=False)
+    density = nb.mapr(patch.outputs["Fac"], 0.3, 0.7, 0.55, 1.0)
+    hairs = nb.math("MULTIPLY", nb.math("MULTIPLY", fleck, density), area)
+    # Under the speckle, a soft shadow so the lower face reads darker overall.
+    shadow = nb.math("MULTIPLY", area, 0.22 * amount)
+    out = _tint(nt, src, (0.55, 0.45, 0.42), shadow, "MULTIPLY")
+    out = _tint(nt, out, colour, nb.math("MULTIPLY", hairs, 0.85 * amount), "MULTIPLY")
+    nt.links.new(out, bsdf.inputs["Base Color"])
+    _add_bump(nt, nb.math("MULTIPLY", hairs, 1.0), 0.25 * amount, distance=0.0004)
+    return area

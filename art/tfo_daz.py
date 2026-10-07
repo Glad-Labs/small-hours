@@ -138,12 +138,15 @@ def apply_shapes(spec):
     for item in spec.split(","):
         key, val = item.split("=")
         prop = key if "_bs_" in key else key + "_head_bs_Head"
-        if prop not in rig.keys():
-            fname = prop + ".dsf"
-            bpy.ops.daz.import_custom_morphs(filepath=folder + fname, directory=folder, files=[{"name": fname}],
-                                             bodypart="Face")
-        api.set_slider(rig, prop, float(val))
-        print("SHAPE", prop, val, "(present)" if prop in rig.keys() else "(MISSING)")
+        try:
+            if prop not in rig.keys():
+                fname = prop + ".dsf"
+                bpy.ops.daz.import_custom_morphs(filepath=folder + fname, directory=folder, files=[{"name": fname}],
+                                                 bodypart="Face")
+            api.set_slider(rig, prop, float(val))
+            print("SHAPE", prop, val, "(present)" if prop in rig.keys() else "(MISSING)")
+        except Exception as e:
+            print("SHAPE could not apply", prop, str(e)[:120])
     api.update_drivers(rig)
     bpy.context.view_layer.update()
 
@@ -252,13 +255,20 @@ for slot in (eyes.material_slots if eyes else []):
 BASE = LIB + "/Runtime/Textures/DAZ/Characters/Genesis9/Base/"
 
 
-def cutout(m, alpha_path, colour=None, colour_path=None):
+def cutout(m, alpha_path, colour=None, colour_path=None, strength=1.0):
     """Card hair (lashes, brows): colour from a value or texture, see-through where the mask is dark."""
     b = principled(m)
     for l in list(b.inputs["Base Color"].links) + list(b.inputs["Alpha"].links):
         m.node_tree.links.remove(l)
     mask = image_node(m, alpha_path, colour=False)
-    m.node_tree.links.new(mask.outputs["Color"], b.inputs["Alpha"])
+    if strength != 1.0:                                  # thin out the card: fewer, fainter hairs
+        sc = m.node_tree.nodes.new("ShaderNodeMath")
+        sc.operation = "MULTIPLY"
+        sc.inputs[1].default_value = strength
+        m.node_tree.links.new(mask.outputs["Color"], sc.inputs[0])
+        m.node_tree.links.new(sc.outputs[0], b.inputs["Alpha"])
+    else:
+        m.node_tree.links.new(mask.outputs["Color"], b.inputs["Alpha"])
     if colour_path:
         c = image_node(m, colour_path)
         m.node_tree.links.new(c.outputs["Color"], b.inputs["Base Color"])
@@ -275,7 +285,8 @@ def cutout(m, alpha_path, colour=None, colour_path=None):
 
 lashes = find("Eyelashes")
 for slot in (lashes.material_slots if lashes else []):
-    cutout(slot.material, BASE + "Eyelashes/Genesis9_Eyelashes0%d_C.jpg" % int(opt("--lashes", 1)), colour=(0.015, 0.01, 0.008, 1))
+    cutout(slot.material, BASE + "Eyelashes/Genesis9_Eyelashes0%d_C.jpg" % int(opt("--lashes", 1)), colour=(0.015, 0.01, 0.008, 1),
+           strength=float(opt("--lashfade", 1.0)))
 brows = find("Eyebrows")
 for slot in (brows.material_slots if brows else []):
     cutout(slot.material, BASE + ("Eyebrows/OpacityCutout01_Thin.jpg" if opt("--browcut", "thick") == "thin" else "Eyebrows/OpacityCutout02_Thick.jpg"), colour=((tuple(float(x) for x in args[args.index("--brow") + 1].split(",")) + (1,)) if "--brow" in args else (0.045, 0.028, 0.02, 1)))
@@ -486,7 +497,7 @@ if "--knit" in args and find("Shirt"):
 
 bpy.context.view_layer.update()
 # --- skin: ageing and makeup, anchored to the neutral face --------------------------------------------------
-if opt("--age") or opt("--makeup"):
+if opt("--age") or opt("--makeup") or opt("--stubble"):
     import skinfx
     bpy.context.view_layer.update()
     lms = skinfx.landmarks(body)
@@ -494,6 +505,8 @@ if opt("--age") or opt("--makeup"):
         skinfx.age(body, lms, amount=float(opt("--age")))
     if opt("--makeup"):
         skinfx.makeup(body, lms, amount=float(opt("--makeup")))
+    if opt("--stubble"):
+        skinfx.stubble(body, lms, amount=float(opt("--stubble")))
     print("SKINFX age", opt("--age"), "makeup", opt("--makeup"))
 
 # --- expression: Daz's FACS controls, the same face units the MakeHuman characters used ------------------
@@ -732,3 +745,14 @@ if "--skindiag" in args:
     ev.to_mesh_clear()
     e_o = find("Eyes"); evs = [e_o.matrix_world @ v.co for v in e_o.data.vertices]
     em = sum(evs, Vector((0, 0, 0))) / len(evs); print("LM eyes mid x=%.3f y=%.3f z=%.3f" % (em.x, em.y, em.z))
+
+if "--rigkeys" in args:
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    print("RIGKEYS", [k for k in rig.keys() if any(w in k for w in ("Matt", "Masculine", "Feminine", "Character", "Head", "Daz"))][:40])
+    print("RIGKEYS body", [k for k in body.keys()][:20])
+    print("RIGKEYS sk", [k.name for k in body.data.shape_keys.key_blocks if "Masculine" in k.name or "Matt" in k.name or "Square" in k.name or "Round" in k.name][:20])
+
+if "--rigkeys2" in args:
+    print("RK2", " ".join("%s=%.2f" % (k.name, k.value) for k in body.data.shape_keys.key_blocks if k.name != "Basis" and not k.name.startswith(("facs_", "pJCM", "head_bs_Mouth", "pCTRL"))) [:3000])
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    print("RK2 ctrl", rig.get("Matt_figure_ctrl_Character"))
