@@ -235,7 +235,7 @@ def age(body, lm, amount=1.0):
     return creases
 
 
-def makeup(body, lm, amount=1.0, lip=(0.46, 0.08, 0.11), blush=(0.88, 0.30, 0.30), shadow=(0.30, 0.15, 0.14)):
+def makeup(body, lm, amount=1.0, eye_z=None, lip=(0.46, 0.08, 0.11), blush=(0.88, 0.30, 0.30), shadow=(0.30, 0.15, 0.14)):
     """Lipstick, blush and eyeshadow, with a little shine on the lips."""
     nt = _head_material(body).node_tree
     bsdf, src = _base_color_source(nt)
@@ -253,10 +253,23 @@ def makeup(body, lm, amount=1.0, lip=(0.46, 0.08, 0.11), blush=(0.88, 0.30, 0.30
     cheek = lm["l_cheek"]
     blush_m = nb.maxof([nb.blob(p, (s * (cheek.x - 0.004), cheek.y, cheek.z - 0.006), (0.034, 1.0, 0.024)) for s in (-1, 1)])
     up = lm["l_eyelidupper"]
-    lid_m = nb.maxof([nb.blob(p, (s * (up.x + 0.001), up.y, up.z + 0.0045), (0.019, 1.0, 0.0085)) for s in (-1, 1)])
+    lid_z = (eye_z + 0.0017) if eye_z is not None else up.z       # the lid margin: just above the eyeball's centre
+    lid_m = nb.maxof([nb.blob(p, (s * (up.x + 0.001), up.y, lid_z + 0.0045), (0.019, 1.0, 0.0085)) for s in (-1, 1)])
 
+    # Eyeliner along the upper lid with a small wing, and a softer smudge under the outer lower lid.
+    liner = []
+    for sd in (-1, 1):
+        x0, x1 = up.x - 0.0155, up.x + 0.0165
+        z = lid_z + 0.0004
+        liner.append(nb.groove(nb.seg_dist(p, (sd * x0, 0, z - 0.0006), (sd * x1, 0, z + 0.0012)), 0.0016))
+        liner.append(nb.groove(nb.seg_dist(p, (sd * x1, 0, z + 0.0012), (sd * (x1 + 0.0075), 0, z + 0.0045)), 0.0013))
+    liner_m = nb.maxof(liner)
+    low = lm["l_eyelidlower"]
+    smudge = nb.maxof([nb.blob(p, (sd * (low.x + 0.007), low.y, low.z - 0.0012), (0.011, 1.0, 0.0032)) for sd in (-1, 1)])
     out = _tint(nt, src, blush, nb.math("MULTIPLY", blush_m, 0.20 * amount))
     out = _tint(nt, out, shadow, nb.math("MULTIPLY", lid_m, 0.34 * amount))
+    out = _tint(nt, out, (0.10, 0.06, 0.05), nb.math("MULTIPLY", smudge, 0.30 * amount))
+    out = _tint(nt, out, (0.015, 0.010, 0.010), nb.math("MULTIPLY", liner_m, 0.92 * amount))
     out = _tint(nt, out, lip, nb.math("MULTIPLY", lip_mask, 0.62 * amount))
     nt.links.new(out, bsdf.inputs["Base Color"])
     return lip_mask
@@ -299,3 +312,11 @@ def stubble(body, lm, amount=1.0, colour=(0.55, 0.52, 0.5)):
     nt.links.new(out, bsdf.inputs["Base Color"])
     _add_bump(nt, nb.math("MULTIPLY", hairs, 1.0), 0.25 * amount, distance=0.0004)
     return area
+
+
+def smooth(body, amount=0.5):
+    """Softer skin: weaken the pore-scale normal map (1.0 keeps it as is)."""
+    nt = _head_material(body).node_tree
+    for n in nt.nodes:
+        if n.bl_idname == "ShaderNodeNormalMap":
+            n.inputs["Strength"].default_value = amount

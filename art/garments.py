@@ -173,6 +173,8 @@ def _fabric(name, colour, rib_scale, rib_strength, band_rib_scale, rough=0.85, s
     b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = lib.rgb(colour)
     b.inputs["Roughness"].default_value = rough
+    if "Specular IOR Level" in b.inputs:
+        b.inputs["Specular IOR Level"].default_value = 0.2        # cloth hardly reflects: keeps dark colours dark
     if "Sheen Weight" in b.inputs:
         b.inputs["Sheen Weight"].default_value = sheen
     coord = nt.nodes.new("ShaderNodeTexCoord")
@@ -221,12 +223,94 @@ def _neck_hem(neck_z, hem_z, dip=0.25):
     return planes, keep
 
 
-def sweater(body, colour="#7f8c6c", neck_z=None, hem_z=None):
-    """A long-sleeved knit sweater with ribbed cuffs, hem and crew neck."""
+def _cable_knit(name, colour):
+    """A chunky cable knit: wide vertical ribs, plaited cables between them, a fuzzy surface."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    b.inputs["Base Color"].default_value = lib.rgb(colour)
+    b.inputs["Roughness"].default_value = 0.95
+    if "Specular IOR Level" in b.inputs:
+        b.inputs["Specular IOR Level"].default_value = 0.15
+    if "Sheen Weight" in b.inputs:
+        b.inputs["Sheen Weight"].default_value = 0.12
+        b.inputs["Sheen Roughness"].default_value = 0.5
+    coord = nt.nodes.new("ShaderNodeTexCoord")
+    # Ribs: straight columns, 22 per metre of width, rounded.
+    ribs = nt.nodes.new("ShaderNodeTexWave")
+    ribs.bands_direction = "X"
+    ribs.wave_profile = "SIN"
+    ribs.inputs["Scale"].default_value = 70.0
+    ribs.inputs["Distortion"].default_value = 0.0
+    nt.links.new(coord.outputs["Object"], ribs.inputs["Vector"])
+    # Cables: every third column braids; a diagonal wave on the vertical axis makes the plait.
+    cab = nt.nodes.new("ShaderNodeTexWave")
+    cab.bands_direction = "DIAGONAL"
+    cab.inputs["Scale"].default_value = 160.0
+    cab.inputs["Distortion"].default_value = 3.0
+    cab.inputs["Detail"].default_value = 1.0
+    nt.links.new(coord.outputs["Object"], cab.inputs["Vector"])
+    zone = nt.nodes.new("ShaderNodeTexWave")
+    zone.bands_direction = "X"
+    zone.inputs["Scale"].default_value = 23.0
+    zone.inputs["Distortion"].default_value = 0.0
+    nt.links.new(coord.outputs["Object"], zone.inputs["Vector"])
+    zmap = nt.nodes.new("ShaderNodeMapRange")
+    zmap.interpolation_type = "SMOOTHSTEP"
+    zmap.inputs[1].default_value, zmap.inputs[2].default_value = 0.55, 0.8
+    nt.links.new(zone.outputs["Fac"], zmap.inputs[0])
+    mixh = nt.nodes.new("ShaderNodeMix")
+    mixh.data_type = "FLOAT"
+    nt.links.new(zmap.outputs["Result"], mixh.inputs["Factor"])
+    nt.links.new(ribs.outputs["Fac"], mixh.inputs["A"])
+    nt.links.new(cab.outputs["Fac"], mixh.inputs["B"])
+    band = nt.nodes.new("ShaderNodeAttribute")
+    band.attribute_name = "band"
+    cuff = nt.nodes.new("ShaderNodeWave") if False else nt.nodes.new("ShaderNodeTexWave")
+    cuff.bands_direction = "X"
+    cuff.inputs["Scale"].default_value = 210.0
+    nt.links.new(coord.outputs["Object"], cuff.inputs["Vector"])
+    pick = nt.nodes.new("ShaderNodeMix")
+    pick.data_type = "FLOAT"
+    nt.links.new(band.outputs["Fac"], pick.inputs["Factor"])
+    nt.links.new(mixh.outputs["Result"], pick.inputs["A"])
+    nt.links.new(cuff.outputs["Fac"], pick.inputs["B"])
+    fuzz = nt.nodes.new("ShaderNodeTexNoise")
+    fuzz.inputs["Scale"].default_value = 500.0
+    add = nt.nodes.new("ShaderNodeMath")
+    add.operation = "MULTIPLY_ADD"
+    add.inputs[1].default_value = 2.2
+    nt.links.new(pick.outputs["Result"], add.inputs[0])
+    nt.links.new(fuzz.outputs["Fac"], add.inputs[2])
+    bump = nt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.9
+    bump.inputs["Distance"].default_value = 0.004
+    nt.links.new(add.outputs[0], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+    # Light and shade in the grooves: a little darker where the height is low.
+    dark = nt.nodes.new("ShaderNodeMix")
+    dark.data_type = "RGBA"
+    dark.blend_type = "MULTIPLY"
+    dark.inputs["B"].default_value = (0.55, 0.55, 0.55, 1.0)
+    inv = nt.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    nt.links.new(pick.outputs["Result"], inv.inputs[1])
+    nt.links.new(inv.outputs[0], dark.inputs["Factor"])
+    dark.inputs["A"].default_value = lib.rgb(colour)
+    nt.links.new(dark.outputs["Result"], b.inputs["Base Color"])
+    return m
+
+
+def sweater(body, colour="#7f8c6c", neck_z=None, hem_z=None, chunky=False):
+    """A long-sleeved knit sweater with ribbed cuffs, hem and crew neck. chunky: cable knit, thicker and softer."""
     planes, keep = _neck_hem(neck_z, hem_z, dip=0.3)
     ob = build(body, TORSO + SHOULDERS + UPPER_ARMS + FOREARMS + NECK, "sweater", offset=0.02, smooth_iters=30,
-               thickness=0.004, keep=keep, planes=planes, flatten=0.004, drape=3)
-    _assign(ob, _fabric("knit", colour, rib_scale=120.0, rib_strength=1.0, band_rib_scale=260.0, sheen=0.05))
+               thickness=0.006 if chunky else 0.004, keep=keep, planes=planes, flatten=0.004, drape=3,
+               band_width=0.04 if chunky else 0.03)
+    _assign(ob, _cable_knit("cable_knit", colour) if chunky else
+            _fabric("knit", colour, rib_scale=120.0, rib_strength=1.0, band_rib_scale=260.0, sheen=0.05))
     return ob
 
 
@@ -309,3 +393,102 @@ def trousers(body, colour="#2d3238", top_z=None, bottom_z=None, offset=0.016):
         obs.append(_hull_object(half, nm, offset, mat))
     print("GARMENT trousers: %d points" % len(pts))
     return obs
+
+
+def collar_and_tie(body, shirt_obj, neck_z, collar_colour="#d8d3c6", tie_colour="#5a1c26", tie_bottom_z=None):
+    """A turned-down shirt collar and a necktie lying on the shirt front. The tie is placed against the shirt's
+    actual surface, so it sits flat whatever the body shape; garments outside the shirt (the waistcoat) cover it."""
+    from mathutils.bvhtree import BVHTree
+    dom = _dominant_groups(body)
+    pos, _ = _skin_positions(body)
+    ring = [pos[i] for i, g in enumerate(dom) if g in ("neck1", "neck2") and abs(pos[i].z - neck_z) < 0.012]
+    cx = sum(p.x for p in ring) / len(ring)
+    cy = sum(p.y for p in ring) / len(ring)
+    rx = max(abs(p.x - cx) for p in ring)
+    ry = max(abs(p.y - cy) for p in ring)
+    mat = _fabric("collar_cotton", collar_colour, rib_scale=900.0, rib_strength=0.05, band_rib_scale=900.0, rough=0.6,
+                  sheen=0.05, fuzz=1500.0)
+    # --- collar: a band that stands around the neck, with points that fall forward over the shirt front
+    n = 72
+    rows = 3
+    verts, faces = [], []
+    gap = 0.20                                          # radians left open at the front for the knot
+    for r in range(rows):
+        for k in range(n + 1):
+            th = -math.pi + gap + (2 * math.pi - 2 * gap) * k / n          # -pi.. pi, 0 at the back
+            close = max(0.0, 1.0 - (math.pi - abs(th)) / (math.pi * 0.55))   # 1 at the front, 0 a little way round
+            pt = close * close * (3 - 2 * close)                             # the points: only near the front
+            t = r / (rows - 1)
+            drop = 0.040 * pt * t                                            # points fall toward the chest
+            out = 0.013 + 0.012 * t + 0.014 * pt * t
+            x = cx + (rx + out) * math.sin(th)
+            y = cy + (ry + out) * math.cos(th)                               # th = +-pi is the front (-y)
+            verts.append((x, y, neck_z - 0.006 + 0.026 * (1 - t) - drop - 0.002 * t))
+    for r in range(rows - 1):
+        for k in range(n):
+            a = r * (n + 1) + k
+            faces.append((a, a + 1, a + n + 2, a + n + 1))
+    me = bpy.data.meshes.new("collar")
+    me.from_pydata(verts, [], faces)
+    co = bpy.data.objects.new("collar", me)
+    bpy.context.scene.collection.objects.link(co)
+    sol = co.modifiers.new("thick", "SOLIDIFY")
+    sol.thickness = 0.0025
+    sub = co.modifiers.new("smooth", "SUBSURF")
+    sub.levels = 1
+    sub.render_levels = 2
+    for p in me.polygons:
+        p.use_smooth = True
+    me.materials.append(mat)
+
+    # --- tie
+    dg = bpy.context.evaluated_depsgraph_get()
+    ev = shirt_obj.evaluated_get(dg)
+    sm = ev.to_mesh()
+    sverts = [shirt_obj.matrix_world @ v.co for v in sm.vertices]
+    sm.calc_loop_triangles()
+    tree = BVHTree.FromPolygons(sverts, [tuple(t.vertices) for t in sm.loop_triangles])
+    ev.to_mesh_clear()
+
+    def front_y(x, z):
+        hit = tree.ray_cast((x, cy - 0.4, z), (0.0, 1.0, 0.0))
+        return hit[0].y if hit[0] is not None else cy - ry - 0.02
+
+    bottom = tie_bottom_z if tie_bottom_z is not None else neck_z - 0.36
+    top = neck_z - 0.004
+    tmat = _fabric("tie_silk", tie_colour, rib_scale=500.0, rib_strength=0.12, band_rib_scale=500.0, rough=0.5,
+                   sheen=0.0, fuzz=2500.0)
+    steps = 40
+    tv, tf = [], []
+    for k in range(steps + 1):
+        t = k / steps
+        z = top - (top - bottom) * t
+        w = 0.011 + 0.014 * min(1.0, t * 2.0) if t < 0.99 else 0.0       # narrow under the knot, widening to the blade
+        if t > 0.94:
+            w *= max(0.0, (1.0 - t) / 0.06)                              # pointed tip
+        y = front_y(0.0, z) - 0.0022 - 0.0012 * math.sin(t * math.pi)
+        for sd in (-1, 1):
+            tv.append((sd * w, y, z))
+    for k in range(steps):
+        a = 2 * k
+        tf.append((a, a + 1, a + 3, a + 2))
+    tm = bpy.data.meshes.new("tie")
+    tm.from_pydata(tv, [], tf)
+    to = bpy.data.objects.new("tie", tm)
+    bpy.context.scene.collection.objects.link(to)
+    s2 = to.modifiers.new("thick", "SOLIDIFY")
+    s2.thickness = 0.004
+    for p in tm.polygons:
+        p.use_smooth = True
+    tm.materials.append(tmat)
+    # knot: a squashed rounded wedge at the collar
+    ky = front_y(0.0, top) - 0.005
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.0155, segments=24, ring_count=16, location=(0.0, ky, top - 0.004))
+    kn = bpy.context.active_object
+    kn.name = "tie_knot"
+    kn.scale = (1.0, 0.6, 0.9)
+    kn.data.materials.append(tmat)
+    for p in kn.data.polygons:
+        p.use_smooth = True
+    print("COLLAR+TIE neck %.3f,%.3f r %.3f/%.3f" % (cx, cy, rx, ry))
+    return co, to, kn

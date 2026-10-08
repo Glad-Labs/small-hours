@@ -24,7 +24,7 @@ class Style:
                  melanin=0.86, redness=0.5, radius=0.00005, lift=0.003, volume=0.006, hang_volume=0.012,
                  curl_under=0.02, back_shorter=0.015, fringe=False, seed=11,
                  top_len=0.055, side_len=0.014, sweep=0.9, cap_shade=None, hairline_up=0.0, hairline_exp=1.35,
-                 tint=None, color=None, taper=0.0, frame=58.0, comb_back=0.65, wave=0.0, wave_len=0.075, shine=0.0):
+                 tint=None, color=None, taper=0.0, frame=58.0, comb_back=0.65, wave=0.0, wave_len=0.075, shine=0.0, frizz=1.0, clump=0.35, lift_up=1.0, color2=None, mix=0.5):
         self.cut, self.part_x, self.length_z = cut, part_x, length_z
         self.strands, self.clumps, self.step = strands, clumps, step
         self.melanin, self.redness, self.radius = melanin, redness, radius
@@ -35,6 +35,8 @@ class Style:
         self.cap_shade, self.hairline_up, self.hairline_exp, self.tint = cap_shade, hairline_up, hairline_exp, tint
         self.frame, self.comb_back = frame, comb_back          # degrees kept clear of the face; how far the front is swept back
         self.wave, self.wave_len, self.shine = wave, wave_len, shine    # soft waves (fraction of the width), their length, gloss
+        self.frizz, self.clump, self.lift_up = frizz, clump, lift_up      # fly-aways, lock-forming, how far the top stands up
+        self.color2, self.mix = color2, mix                              # second colour for salt-and-pepper, share of the second
         self.taper = taper                                      # fraction the drape narrows by toward the ends
         self.color = color                                       # linear RGB; overrides melanin (for grey/white/dyed hair)
 
@@ -225,7 +227,7 @@ def grow(body, eye, style, name="hair"):
             loc, n, _, dist = bvh.find_nearest(p)
             t = walked / length
             if topness > 0.25:
-                lift = (0.15 + 0.6 * frontness) * (1 - t * 0.4)
+                lift = (0.15 + 0.6 * frontness) * (1 - t * 0.4) * style.lift_up
                 want = Vector((side * 0.45, style.sweep, lift))
             else:
                 want = Vector((side * 0.4, 0.35, -1.0))
@@ -260,9 +262,9 @@ def grow(body, eye, style, name="hair"):
             for i in range(n):
                 t = i / max(1, n - 1)
                 gi = min(len(gd) - 1, int(t * (len(gd) - 1)))
-                pull = 0.35 * t * t
+                pull = style.clump * t * t
                 s[i] = s[i].lerp(gd[gi] + (r - guide_roots[g]) * (1 - t), pull)
-        fz = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 0.3))) * rnd.uniform(0.0004, 0.0016)
+        fz = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 0.3))) * rnd.uniform(0.0004, 0.0016) * style.frizz
         n = len(s)
         for i in range(n):
             s[i] = s[i] + fz * (i / max(1, n - 1)) ** 1.5
@@ -285,6 +287,19 @@ def grow(body, eye, style, name="hair"):
     if style.color is not None:
         h.parametrization = "COLOR"
         h.inputs["Color"].default_value = (*style.color, 1.0)
+        if style.color2 is not None:                     # salt and pepper: each strand picks one of two colours
+            info = nt.nodes.new("ShaderNodeHairInfo")
+            pick = nt.nodes.new("ShaderNodeMapRange")
+            pick.interpolation_type = "LINEAR"
+            pick.inputs[1].default_value = style.mix - 0.001
+            pick.inputs[2].default_value = style.mix + 0.001
+            nt.links.new(info.outputs["Random"], pick.inputs[0])
+            colmix = nt.nodes.new("ShaderNodeMix")
+            colmix.data_type = "RGBA"
+            colmix.inputs["A"].default_value = (*style.color2, 1.0)
+            colmix.inputs["B"].default_value = (*style.color, 1.0)
+            nt.links.new(pick.outputs["Result"], colmix.inputs["Factor"])
+            nt.links.new(colmix.outputs["Result"], h.inputs["Color"])
     else:
         h.parametrization = "MELANIN"
         h.inputs["Melanin"].default_value = style.melanin

@@ -212,7 +212,7 @@ def image_node(m, path, colour=True):
 
 
 # Eyes: the importer leaves Genesis 9's layered iris/sclera shader blank, so use the combined eye texture.
-EYE_TEX = TEX + "G9_Eyes09_D.jpg"
+EYE_TEX = TEX + "G9_Eyes%02d_D.jpg" % int(opt("--eyetex", 9))
 eyes = find("Eyes")
 for slot in (eyes.material_slots if eyes else []):
     m = slot.material
@@ -436,8 +436,11 @@ if "--crop" in args:
     ev = [e.matrix_world @ v.co for v in e.data.vertices]
     eye_mid = sum(ev, Vector((0, 0, 0))) / len(ev)
     style = hairgen.Style(cut="crop", part_x=0.025, strands=40000 if fast else 80000, clumps=1200 if fast else 2000,
-                          color=(0.0065, 0.007, 0.0085), radius=0.00007, lift=0.0025, volume=0.012, hairline_exp=0.6,
-                          top_len=0.06, side_len=0.012, sweep=1.0, cap_shade=0.08, hairline_up=0.012 + float(opt("--recede", 0.0)), step=0.004)
+                          color=(0.012, 0.012, 0.0135), radius=0.00007, lift=0.0025, volume=0.012, hairline_exp=0.6,
+                          top_len=float(opt("--toplen", 0.06)), side_len=0.012, sweep=1.0, cap_shade=0.08,
+                          frizz=float(opt("--frizz", 1.0)), clump=float(opt("--clump", 0.35)), lift_up=float(opt("--liftup", 1.0)),
+                          color2=(tuple(float(x) for x in opt("--haircolor2").split(",")) if opt("--haircolor2") else None),
+                          mix=float(opt("--hairmix", 0.5)), hairline_up=0.012 + float(opt("--recede", 0.0)), step=0.004)
     hairgen.grow(body, eye_mid, style, name="webb_hair")
 
 # --- clothes made from the body (art/garments.py) ---------------------------------------------------------
@@ -449,10 +452,14 @@ if "--sweater" in args or "--waistcoat" in args:
     neck_z = eye_z - 0.145                  # a crew neckline just below the throat
     hem_z = eye_z - 0.745                   # hip length: just below a sprite's bottom edge (eye - 0.73)
     if "--sweater" in args:
-        garments.sweater(body, colour="#3f4d3c", neck_z=neck_z, hem_z=hem_z)
+        garments.sweater(body, colour=opt("--sweatercolor", "#3f4d3c"), neck_z=neck_z + (0.03 if "--chunky" in args else 0.0),
+                         hem_z=hem_z, chunky="--chunky" in args)
     if "--waistcoat" in args:
-        garments.shirt(body, neck_z=eye_z - 0.13, hem_z=hem_z)
-        garments.waistcoat(body, colour="#2d3238", v_bottom_z=eye_z - 0.36, hem_z=eye_z - 0.745)
+        shirt_ob = garments.shirt(body, neck_z=eye_z - 0.13, hem_z=hem_z)
+        if "--tie" in args:
+            bpy.context.view_layer.update()
+            garments.collar_and_tie(body, shirt_ob, eye_z - 0.13, tie_colour=opt("--tie"), tie_bottom_z=eye_z - 0.375)
+        garments.waistcoat(body, colour="#2d3238", v_bottom_z=eye_z - 0.34, hem_z=eye_z - 0.745)
 
 if "--trousers" in args:
     import garments
@@ -497,16 +504,20 @@ if "--knit" in args and find("Shirt"):
 
 bpy.context.view_layer.update()
 # --- skin: ageing and makeup, anchored to the neutral face --------------------------------------------------
-if opt("--age") or opt("--makeup") or opt("--stubble"):
+if opt("--age") or opt("--makeup") or opt("--stubble") or opt("--smooth"):
     import skinfx
     bpy.context.view_layer.update()
     lms = skinfx.landmarks(body)
     if opt("--age"):
         skinfx.age(body, lms, amount=float(opt("--age")))
     if opt("--makeup"):
-        skinfx.makeup(body, lms, amount=float(opt("--makeup")))
+        e_obj = find("Eyes")
+        eye_cz = sum((e_obj.matrix_world @ v.co).z for v in e_obj.data.vertices) / len(e_obj.data.vertices)
+        skinfx.makeup(body, lms, amount=float(opt("--makeup")), eye_z=eye_cz)
     if opt("--stubble"):
         skinfx.stubble(body, lms, amount=float(opt("--stubble")))
+    if opt("--smooth"):
+        skinfx.smooth(body, float(opt("--smooth")))
     print("SKINFX age", opt("--age"), "makeup", opt("--makeup"))
 
 # --- expression: Daz's FACS controls, the same face units the MakeHuman characters used ------------------
@@ -525,6 +536,13 @@ EXPRESSIONS = {
 }
 expr = args[args.index("--expr") + 1] if "--expr" in args else "calm"
 rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+if opt("--eyewide"):                                  # a permanent openness of the eyes, under every expression
+    base_wide = float(opt("--eyewide"))
+    EXPRESSIONS.setdefault(expr, {})
+    EXPRESSIONS[expr]["facs_ctrl_EyeWide"] = max(EXPRESSIONS[expr].get("facs_ctrl_EyeWide", 0.0), base_wide)
+    for side in ("Left", "Right"):                    # lids open further than a plain stare: bigger-looking eyes
+        EXPRESSIONS[expr]["facs_bs_EyelidOpenUpper" + side] = base_wide * 1.6
+        EXPRESSIONS[expr]["facs_bs_EyelidOpenLower" + side] = base_wide * 1.2
 if EXPRESSIONS.get(expr):
     for o in bpy.context.view_layer.objects:
         o.select_set(o == rig)
