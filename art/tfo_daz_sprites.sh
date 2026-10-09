@@ -10,8 +10,8 @@ FASTFLAG=""; SUF=""
 if [ -n "$FAST" ]; then FASTFLAG="--fast"; SUF="_fast"; fi
 
 # name  character  expression  yaw  extra flags
-WEBB="--waistcoat --tie #3a0f18 --crop --toplen 0.05 --frizz 0.3 --clump 0.55 --liftup 0.35 --haircolor2 0.13,0.13,0.14 --hairmix 0.55 --browstyle 7 --browcut thick --brow 0.035,0.035,0.037 --lashfade 0.35 --age 1.0 --stubble 1.0 --recede 0.02 --eyetex 12 --shape BaseMasculine=1.0,Ty=0.5,head_bs_AsymmetryFaceSquareLeft=1.0,head_bs_AsymmetryFaceSquareRight=1.0,head_bs_AsymmetryFaceRoundLeft=-0.8,head_bs_AsymmetryFaceRoundRight=-0.8"
-NELL="--sweater --chunky --sweatercolor #5f6f55 --combbob --haircolor 0.72,1.0 --hairlen 0.075 --waves 0.06 --shine 0.4 --makeup 1.0 --eyetex 14 --eyewide 0.5 --shape Kat=0.0,BaseFeminine=1.0,BaseFeminine_body_bs_Body=1.0,Amala=1.0 --browstyle 4 --browcut thin --lashes 2 --brow 0.07,0.03,0.018"
+WEBB="--waistcoat --tie #3a0f18 --crop --toplen 0.05 --frizz 0.3 --clump 0.55 --liftup 0.35 --haircolor2 0.13,0.13,0.14 --hairmix 0.55 --browstyle 7 --browcut thick --brow 0.035,0.035,0.037 --lashfade 0.35 --light soft --lightpower 0.5 --age 1.0 --stubble 1.0 --recede 0.02 --eyetex 12 --shape BaseMasculine=1.0,Ty=0.5,head_bs_AsymmetryFaceSquareLeft=1.0,head_bs_AsymmetryFaceSquareRight=1.0,head_bs_AsymmetryFaceRoundLeft=-0.8,head_bs_AsymmetryFaceRoundRight=-0.8"
+NELL="--sweater --chunky --light soft --lightpower 0.5 --sweatercolor #5f6f55 --combbob --haircolor 0.72,1.0 --hairlen 0.075 --waves 0.06 --shine 0.4 --makeup 1.0 --eyetex 14 --eyewide 0.25 --shape Kat=0.0,BaseFeminine=1.0,BaseFeminine_body_bs_Body=1.0,Amala=1.0 --browstyle 4 --browcut thin --lashes 2 --brow 0.07,0.03,0.018"
 POSES=(
   "webb_calm    Matt charm   12  $WEBB"
   "webb_pressed Matt pressed 12  $WEBB"

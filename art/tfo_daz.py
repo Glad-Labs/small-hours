@@ -564,14 +564,27 @@ eye = sum(evs, Vector((0, 0, 0))) / len(evs)
 yaw = math.radians(float(args[args.index("--yaw") + 1]) if "--yaw" in args else 18.0)   # three-quarter view
 dist, aim_drop = (0.45, 0.0) if "--close" in args else (1.3, 0.12)
 off = Vector((math.sin(yaw) * dist, -math.cos(yaw) * dist, 0.03))
-lib.world_gradient("#262b3d", "#0b0d14", strength=0.45)
-key_dir = Vector((-math.sin(yaw + 0.75), -math.cos(yaw + 0.75), 0))        # from the camera's left
-lib.light("key", "AREA", tuple(eye + key_dir * 1.3 + Vector((0, 0, 0.55))), 210, "#ffe2c8", size=1.1, target=tuple(eye))
-lib.light("fill", "AREA", tuple(eye + Vector((math.sin(yaw) * 1.4 + 0.6, -1.2, -0.15))), 28, "#c4ceff", size=1.8,
-          target=tuple(eye))
-lib.light("rim", "AREA", tuple(eye + Vector((0.75, 0.9, 0.45))), 110, "#a9bcff", size=0.5, target=tuple(eye))
-lib.light("rim2", "AREA", tuple(eye + Vector((-0.8, 0.8, 0.35))), 55, "#ffd9b8", size=0.5, target=tuple(eye))
-lib.light("hair", "AREA", tuple(eye + Vector((0.0, 0.6, 1.1))), 18, "#fff0dc", size=0.9, target=tuple(eye))
+lighting = opt("--light", "moody")
+LP = float(opt("--lightpower", 1.0))
+if lighting == "soft":
+    # Beauty-portrait lighting: one big soft key close to the lens axis, a real fill, a gentle kicker, and a hair light.
+    lib.world_gradient("#3a3f55", "#171a26", strength=0.7)
+    key_dir = Vector((-math.sin(yaw + 0.8), -math.cos(yaw + 0.8), 0))
+    lib.light("key", "AREA", tuple(eye + key_dir * 1.4 + Vector((0, 0, 0.62))), 440 * LP, "#fff0e2", size=1.6, target=tuple(eye))
+    lib.light("fill", "AREA", tuple(eye + Vector((math.sin(yaw) * 1.4 + 0.9, -1.4, -0.1))), 120 * LP, "#d9e2ff", size=2.4,
+              target=tuple(eye))
+    lib.light("rim", "AREA", tuple(eye + Vector((0.8, 0.9, 0.4))), 90, "#b5c6ff", size=0.6, target=tuple(eye))
+    lib.light("rim2", "AREA", tuple(eye + Vector((-0.85, 0.8, 0.35))), 45, "#ffdcc0", size=0.6, target=tuple(eye))
+    lib.light("hair", "AREA", tuple(eye + Vector((0.0, 0.6, 1.1))), 14, "#fff0dc", size=0.9, target=tuple(eye))
+else:
+    lib.world_gradient("#262b3d", "#0b0d14", strength=0.45)
+    key_dir = Vector((-math.sin(yaw + 0.75), -math.cos(yaw + 0.75), 0))        # from the camera's left
+    lib.light("key", "AREA", tuple(eye + key_dir * 1.3 + Vector((0, 0, 0.55))), 210, "#ffe2c8", size=1.1, target=tuple(eye))
+    lib.light("fill", "AREA", tuple(eye + Vector((math.sin(yaw) * 1.4 + 0.6, -1.2, -0.15))), 28, "#c4ceff", size=1.8,
+              target=tuple(eye))
+    lib.light("rim", "AREA", tuple(eye + Vector((0.75, 0.9, 0.45))), 110, "#a9bcff", size=0.5, target=tuple(eye))
+    lib.light("rim2", "AREA", tuple(eye + Vector((-0.8, 0.8, 0.35))), 55, "#ffd9b8", size=0.5, target=tuple(eye))
+    lib.light("hair", "AREA", tuple(eye + Vector((0.0, 0.6, 1.1))), 18, "#fff0dc", size=0.9, target=tuple(eye))
 sprite = "--sprite" in args
 if sprite:
     # Same framing as the game's existing character sprites: orthographic, head and torso, 1050x1400, transparent.
