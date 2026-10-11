@@ -602,7 +602,15 @@ else:
 lib.setup_render(w, h, spp, transparent=sprite, exposure=float(opt("--exposure", -0.85)))
 bpy.context.scene.render.threads_mode = "FIXED"
 bpy.context.scene.render.threads = 16
-lib.render(out)
+if opt("--save"):
+    # A ready-to-open scene for hand-tuning. It references the Daz textures in the asset library rather than
+    # packing them, and stays out of git: the meshes are Daz content we may render but not redistribute.
+    sc_ = bpy.context.scene
+    sc_.render.filepath = out
+    bpy.ops.wm.save_as_mainfile(filepath=opt("--save"))
+    print("SAVED", opt("--save"))
+if "--norender" not in args:
+    lib.render(out)
 
 if "--diag" in args:
     sc = bpy.context.scene

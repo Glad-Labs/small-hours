@@ -54,3 +54,6 @@ art/_*.py
 # art experiments: scratch scripts and their renders
 art/_lab/
 art/out/lab/
+
+# hand-tuning scenes built from Daz content: renders only, never the 3D files
+art/scenes/

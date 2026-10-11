@@ -458,4 +458,12 @@ for o in bpy.data.objects:
         print("MODS", o.name, len(o.data.vertices), [(m.type, getattr(m, "render_levels", None), getattr(m, "levels", None), getattr(m, "thickness", None)) for m in o.modifiers])
 if "--dryrun" in args:
     sys.exit(0)
-lib.render(out)
+if opt("--save"):
+    # A ready-to-open scene for hand-tuning. It references the Daz textures in the asset library rather than
+    # packing them, and stays out of git: the meshes are Daz content we may render but not redistribute.
+    sc_ = bpy.context.scene
+    sc_.render.filepath = out
+    bpy.ops.wm.save_as_mainfile(filepath=opt("--save"))
+    print("SAVED", opt("--save"))
+if "--norender" not in args:
+    lib.render(out)
