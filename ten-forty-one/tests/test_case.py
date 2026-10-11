@@ -83,6 +83,37 @@ check(v("webb", [], {"line": "I killed him, of course."}) is not None, "nobody a
 check(v("webb", [], {"line": "Then let's spend it wisely. Going once on a better question, going twice..."}) is not None,
       "copying a persona example is rejected")
 check(v("webb", [], {"line": "Ten forty-one. Write it down, my dear."}) is None, "an ordinary Webb line passes")
+check(v("webb", [], {"action": "He smiles.", "line": "At 10:41 I was on the rostrum selling lot nine, in full view of the room."})
+      == "recites its notes", "reciting the persona's notes word for word is rejected")
+check(v("webb", [], {"action": "He checks his watch.", "line": "Lot nine, under the lights, with sixty witnesses."}) is None,
+      "the same fact in fresh words passes")
+hist = [("q", "(He checks his pocket watch.) The terrible sherry is the real crime tonight.")]
+check(v("webb", [], {"action": "He polishes a cufflink.", "line": "Honestly, lot nine went for a song, and the terrible sherry is the real scandal."}, hist)
+      == "repeats a phrase", "reusing a phrase from the last few lines is rejected")
+check(v("webb", [], {"action": "He checks his pocket watch.", "line": "Ask me about lot nine."}, hist)
+      == "repeats an action", "repeating a gesture is rejected")
+check(v("nell", [], {"action": "She meets his gaze.", "line": "Fine."}) == "assumes the detective's gender",
+      "an action may not give the detective a gender")
+check(v("webb", [], {"action": "I swirl my glass.", "line": "Fine."}) == "action not in third person",
+      "actions are stage directions, in the third person")
+check(v("webb", [], {"action": "He frowns.", "line": "My watch stopped at eleven forty-one."}) == "invents a time",
+      "a clock time that is in no story is rejected")
+check(v("webb", [], {"action": "He frowns.", "line": "From nine to nine-forty, in the green room."}) is None,
+      "times from the person's story pass")
+rec = {"action": "He smiles.", "line": "At 10:41 I was on the rostrum selling lot nine, in full view of the room."}
+check(voice_ai.soften("webb", [], rec, [], "recites its notes") == rec, "a recited alibi is still better than a canned line")
+check(voice_ai.soften("nell", [], {"action": "She meets his gaze.", "line": "Fine."}, [], "assumes the detective's gender")
+      == {"action": "", "line": "Fine."}, "a bad action is dropped, the line kept")
+check(voice_ai.soften("webb", [], {"line": "I killed him."}, [], "admits harm") is None, "plot faults are never softened")
+check(voice_ai.compose("he smiles", "Hello.") == "(He smiles.) Hello.", "an action is joined in front of the line")
+check(voice_ai.split_beat("(He smiles.) Hello.") == ("He smiles.", "Hello."), "and split off again")
+check(voice_ai.drop_vocative("Admit what, my dear detective?", [], "Keep it short.") == "Admit what?",
+      "'my dear' is removed on turns that do not allow it")
+check(voice_ai.drop_vocative("My dear, I assure you.", [], "This time you may call the detective 'my dear'.")
+      == "My dear, I assure you.", "...and kept on turns that do")
+note = voice_ai.director_note("webb", ["time_broken"], [("q", "(He nods.) Ask Nell Ashby.")])
+check("Ashby knows" not in note, "a say-once note is dropped after it has been said")
+check("Ashby knows" in voice_ai.director_note("webb", ["time_broken"], []), "...and given before")
 check("Webb" not in voice_ai.PERSONAS["nell"] or "kill" not in voice_ai.PERSONAS["nell"].lower(), "Nell's prompt does not say who did it")
 check("killed crane" not in voice_ai.PERSONAS["webb"].lower(), "Webb's prompt does not contain the truth")
 

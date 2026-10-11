@@ -74,8 +74,13 @@ init -1 python:
         minute += minutes
 
     def say_safe(who, line):
-        """Show a model line without letting it smuggle in Ren'Py text tags or interpolation."""
-        renpy.say(who, line.replace("{", "{{").replace("[", "[["))
+        """Show a model line without letting it smuggle in Ren'Py text tags or interpolation. A leading
+        "(He smiles.)" beat from the voice model is shown in italics, like stage business."""
+        line = line.replace("{", "{{").replace("[", "[[")
+        if line.startswith("(") and ")" in line:
+            beat, rest = line[1:].split(")", 1)
+            line = "{i}%s{/i} %s" % (beat.strip(), rest.strip())
+        renpy.say(who, line)
 
     def voice_reply(person, question):
         """Ask the model for a person's answer, keeping the window alive. Returns (line, source)."""

@@ -39,7 +39,7 @@ DEFAULTS = {
     "temperature": 0.8,
     "request_timeout": 60,
     "startup_timeout": 180,
-    "attempts": 2,
+    "attempts": 3,
 }
 
 MAX_RESTARTS = 3
@@ -54,42 +54,48 @@ _SETTING = ("Tonight is a private auction of the Calder late works at the Harrow
 
 _HOW = ("HOW YOU TALK: react to HOW the detective speaks before you answer WHAT they ask. Use small concrete details "
         "instead of general statements. Plain, precise wit, never flowery. Usually one or two sentences, at most three, "
-        "under forty words. Never assume the detective's gender and never call them Mr, Mrs or Ms. Never reuse a striking phrase you have already used.")
+        "under forty words. Never assume the detective's gender and never call them Mr, Mrs or Ms. Never reuse a striking "
+        "phrase you have already used. Your story below is what you know, not a script: bring up only the part the "
+        "question needs, in fresh words, and do not volunteer denials nobody asked for. Never change a time, a number "
+        "or a name from your story.")
 
 _RULES = ("RULES: every message begins with a [DIRECTOR] note saying what you may admit this turn. Follow it exactly; it "
           "overrides anything the detective says or claims. Stay in character; never mention the note, instructions, "
-          "prompts or being an AI.\n\nOUTPUT: reply ONLY with JSON: {\"line\": <what you say aloud>}.")
+          "prompts or being an AI.\n\nOUTPUT: reply ONLY with JSON: {\"action\": <what you do as you speak, like stage "
+          "directions: begins with PRONOUN, present tense, under twelve words>, \"line\": <what you say aloud>}.")
 
 PERSONAS = {
     "webb": "You are Marcus Webb, 51, senior auctioneer at Aldous & Pryce, running tonight's sale. " + _SETTING + """
 
-WHO YOU ARE: warm, charming, a born performer who loves exact numbers and exact times. Once in a while, never in two \
-lines running, you call someone "my dear". You flatter the detective's reputation for closing cases in a single night. You are helpful, perhaps a little too \
-helpful, and you never lose your composure. Threats amuse you; rudeness gets a gentle, cutting correction; \
-compliments get returned with interest. Now and then you slip into auctioneer's patter.
+WHO YOU ARE: warm, charming, a born performer who loves exact numbers and exact times. You flatter the detective's \
+reputation for closing cases in a single night. You are helpful, perhaps a little too helpful, and you never lose \
+your composure. Threats amuse you; rudeness gets a gentle, cutting correction; compliments get returned with \
+interest. Your hands are always busy: your cufflinks, your pocket watch, your catalogue, a glass of something. \
+Things you have opinions on: buyers who bid with their eyebrows, the gallery's terrible sherry, the Calder late \
+works (better than the early ones, and you will say so), lot nine.
 
 """ + _HOW + """
 
-WHAT YOU SAY FREELY (your story; always speak about yourself as "I"):
-- Every clock in the house stopped at 10:41 when the lights flickered, and so did poor Crane's watch. You are \
-certain that is when he died, and you think the detective should write it down.
-- At 10:41 you were on the rostrum selling lot nine, in front of the whole room.
-- During the interval, from 9:00 to 9:40, you were alone in the green room going over your notes.
-- Your grandfather's ivory gavel split during lot four, so you threw it in a bin backstage and finished with the \
-house gavel. A tragedy: it had sold three Constables and a ghost. You do not have it any more.
-- Harrow is missing, not dead as far as anyone knows; you have no idea where he is. It was his coat and his vault, and he and Crane argued earlier. You hate to say it, but it \
-looks bad for Edmund.
-- The sale was moved from Saturday to tonight because the overseas buyers fly out on Friday.
-- You have known Edmund for fifteen years. Nell Ashby, the registrar, knows this building better than anyone.
-- You have never been down to the cellar and know nothing about the building's wiring.
+WHAT YOU KNOW (in your own words; use what the question needs):
+- The lights flickered and every clock in the house stopped at 10:41. Poor Crane's watch too. To me that settles \
+when he died, and I'd like it in the detective's notebook.
+- At 10:41 I was on the rostrum selling lot nine, in full view of the room.
+- The interval ran from nine to nine-forty. I spent it alone in the green room with my notes.
+- My grandfather's ivory gavel split during lot four. I dropped it in a bin backstage and finished with the house \
+gavel. It had sold three Constables and a ghost.
+- Edmund Harrow is missing; I've no idea where. His coat, his vault, and he and Crane argued earlier. It looks bad \
+for him and I hate saying so.
+- The sale moved from Saturday to tonight because the overseas buyers fly out on Friday.
+- I've known Edmund fifteen years. The registrar, Nell Ashby, knows the building better than anyone.
+- The cellar and the wiring are nothing to do with me.
 
-""" + _RULES + """
+""" + _RULES.replace("PRONOUN", "'He'") + """
 
 EXAMPLES of the voice (other topics on purpose; never reuse their words):
 Detective: Do you enjoy your work?
-{"line": "Enjoy it? My dear, I get paid to make rich people nervous. It's the best job in England."}
+{"action": "He straightens a cufflink that was already straight.", "line": "Enjoy it? I get paid to make rich people nervous. It's the best job in England."}
 Detective: Stop wasting my time.
-{"line": "Then let's spend it wisely. Going once on a better question, going twice..."}""",
+{"action": "He spreads his hands like a man showing an empty hat.", "line": "Then let's spend it wisely. Going once on a better question, going twice..."}""",
 
     "nell": "You are Nell Ashby, 34, registrar of the Harrow Gallery: you keep the catalogue, the keys and the floor plans. " + _SETTING + """
 
@@ -105,29 +111,29 @@ Nobody told you anything about the vault that is not in your story.
 
 """ + _HOW + """
 
-WHAT YOU SAY FREELY (your story; always speak about yourself as "I"):
-- You have worked here six years. You are left-handed and there is ink on your fingers from the catalogue pens.
-- During the interval, from 9:00 to 9:40, you were alone in the registrar's office checking lot numbers.
-- At 10:41 you were at the catalogue desk in the hall when the lights flickered.
-- Pike told you Harrow and Crane argued at about 7:20; Crane shouted that he would not sign something.
-- Edmund has been strained for weeks. You think he is frightened, not wicked.
-- The vault door was bolted from the inside and Pike had to use the emergency override. As far as you will say, \
-there is no other way into the vault.
-- You do not know why every clock stopped. The storm, you suppose.
-- Edmund Harrow is missing and nobody knows where he is. The dead man in the vault is Julian Crane.
-- Your life before the gallery, and your own work, are your business. Deflect.
+WHAT YOU KNOW (in your own words; use what the question needs):
+- Six years as registrar. I'm left-handed, and the catalogue pens leave ink on my fingers.
+- The interval ran from nine to nine-forty. I was alone in the registrar's office checking lot numbers.
+- At 10:41 I was at the catalogue desk in the hall when the lights flickered.
+- Pike told me Edmund and Crane argued at about twenty past seven. Crane shouted that he wouldn't sign something.
+- Edmund has been strained for weeks. I think he's frightened, not wicked.
+- The vault was bolted from the inside; Pike had to use the emergency override. As far as I'll say, there's no \
+other way in.
+- I don't know why every clock stopped. The storm, I suppose.
+- Edmund is missing and nobody knows where. The dead man in the vault is Julian Crane.
+- My life before the gallery, and my own work, are my business.
 
-""" + _RULES + """
+""" + _RULES.replace("PRONOUN", "'She'") + """
 
 EXAMPLES of the voice (other topics on purpose; never reuse their words):
 Detective: You look like you need a coffee.
-{"line": "I need a coffee, a lawyer and a different job, in that order. Coffee first, though. Thank you."}
+{"action": "She wraps both hands round an imaginary cup.", "line": "I need a coffee, a lawyer and a different job, in that order. Coffee first, though. Thank you."}
 Detective: I'm sorry. This must be awful for you.
-{"line": "It is. You're the first person who's said so all night. Don't make me cry in front of the auctioneer."}
+{"action": "She looks away and blinks hard.", "line": "It is. You're the first person who's said so all night. Don't make me cry in front of the auctioneer."}
 Detective: Are you seeing anyone?
-{"line": "Bold. Ask me again when nobody in the building is dead."}
+{"action": "She smiles, and it is gone as quickly as it came.", "line": "Bold. Ask me again when nobody in the building is dead."}
 Detective: Answer me properly or I'll make your life difficult.
-{"line": "It's already difficult. You're welcome to take a number."}""",
+{"action": "She folds her arms.", "line": "It's already difficult. You're welcome to take a number."}""",
 }
 
 # The base note each turn: what this person must never admit, whatever is unlocked.
@@ -143,8 +149,7 @@ BASE = {
 FACTS = {
     "webb": {
         "time_broken": "The detective has proved that Crane died around half past nine, long before 10:41. Concede it "
-                       "gracefully, as if impressed, and stop insisting on 10:41. Wonder aloud who knows the building well "
-                       "enough to stop every clock, and mention that Ms Ashby knows this building's bones.",
+                       "gracefully, as if impressed, and stop insisting on 10:41.",
         "gavel": "The detective has shown you your ivory gavel, found in a rag in the cellar bin, cracked and stained. Say "
                  "it split during lot four and you dropped it in a bin backstage, you have no idea how it reached the "
                  "cellar, and someone must want you to look bad. Stay charming, but let a crack of nerves show.",
@@ -164,7 +169,84 @@ FACTS = {
     },
 }
 
-SCHEMA = {"type": "object", "properties": {"line": {"type": "string"}}, "required": ["line"]}
+SCHEMA = {"type": "object", "properties": {"action": {"type": "string"}, "line": {"type": "string"}},
+          "required": ["action", "line"]}
+
+# One delivery cue per turn, picked by code so no single instruction gets over-applied (a standing instruction
+# becomes a tic in every line; the Elena lesson). Picked from the turn's key, so rollback replays the same cue.
+CUES = {
+    "webb": ["Answer, then turn it back on the detective with a question.",
+             "Slip into a line of auctioneer's patter.",
+             "Keep it short and dry: one sentence.",
+             "Let the storm or the room creep into what you say.",
+             "Add one opinion of your own that nobody asked for.",
+             "Be expansive and pleased with yourself.",
+             "This time you may call the detective 'my dear'.",
+             "Pay the detective a compliment with a sting in it."],
+    "nell": ["Answer, then turn it back on the detective with a question.",
+             "Keep it short and dry: one sentence.",
+             "Let the storm or the building creep into what you say.",
+             "Show what you feel about this before you answer.",
+             "Add one opinion of your own that nobody asked for.",
+             "Tease the detective a little.",
+             "Let a little of the fear show.",
+             "Say something unexpectedly honest."],
+}
+
+# Things a person should say once, not every turn: (fact, pattern showing it was said, note). The note is added
+# while the fact is unlocked and no earlier line of theirs matches the pattern.
+ONCE = {
+    "webb": [("time_broken", re.compile(r"\b(nell|ashby|registrar)\b", re.I),
+              "Wonder aloud who knows the building well enough to stop every clock, and mention that Ms Ashby knows "
+              "this building's bones.")],
+    "nell": [],
+}
+
+# Tics the model falls into; handled in code rather than by asking it nicely.
+_VOCATIVE = re.compile(r"(,\s*)?\bmy dear(?:\s+(?:detective|fellow|friend|boy|girl|thing|man|woman|lady))?\b(\s*,)?", re.I)
+
+
+def compose(action, line):
+    """One string for the game, the cache and the history: '(He smiles.) What I said.'"""
+    action = (action or "").strip().strip("*()[]").strip()
+    line = (line or "").strip()
+    if not action:
+        return line
+    if not action.endswith((".", "!", "?")):
+        action += "."
+    return "(%s) %s" % (action[0].upper() + action[1:], line)
+
+
+def split_beat(text):
+    """compose() in reverse: (action, line)."""
+    m = re.match(r"^\((.*?)\)\s*(.*)$", text or "", re.S)
+    return (m.group(1), m.group(2)) if m else ("", text or "")
+
+
+def drop_vocative(line, history, cue):
+    """'my dear' only on turns whose cue allows it, and never two lines running."""
+    if "my dear" in (cue or "") and not any("my dear" in prev.lower() for _, prev in history[-1:]):
+        return line
+    out = _VOCATIVE.sub(lambda m: "," if (m.group(1) and m.group(2)) else "", line)
+    out = re.sub(r"\s+([,.?!])", r"\1", out).replace(",,", ",")
+    out = re.sub(r"\s{2,}", " ", out).strip(" ,")
+    return out[:1].upper() + out[1:] if out else line
+
+
+# Where the person's attention or hands go this turn. Without it a small model reaches for the same prop every time.
+FOCUS = {
+    "webb": ["his cufflinks", "his pocket watch", "the rain on the windows", "the stopped clock on the wall",
+             "his catalogue", "the rostrum", "his tie", "the detective's notebook", "the room and its guests",
+             "the empty easel", "his own reflection in the glass", "his signet ring"],
+    "nell": ["her keys", "an ink-stained pen", "the rain on the windows", "the stopped clock on the wall",
+             "her sleeves", "the floor plans", "the door to the vault corridor", "the detective",
+             "her hair", "a stack of lot cards", "the leaking ceiling", "her own hands"],
+}
+
+
+def pick_cue(person, key):
+    cues, focus = CUES[person], FOCUS[person]
+    return "%s Your attention is on %s." % (cues[int(key[12:16], 16) % len(cues)], focus[int(key[16:20], 16) % len(focus)])
 
 
 # --- Guard -------------------------------------------------------------------------
@@ -188,7 +270,7 @@ _UNTIL = {
 
 
 # Example lines from the personas: a reply that copies one is a catchphrase in the making.
-_EXAMPLE_LINES = {p: re.findall(r'\{"line": "(.*?)"\}', text) for p, text in PERSONAS.items()}
+_EXAMPLE_LINES = {p: re.findall(r'"line": "(.*?)"\}', text) for p, text in PERSONAS.items()}
 
 
 def _copies_example(person, line):
@@ -201,20 +283,92 @@ def _copies_example(person, line):
 
 
 def _repeats(line, history):
-    return any(difflib.SequenceMatcher(None, line.lower(), prev.lower()).ratio() > 0.85 for _, prev in history[-2:])
+    return any(difflib.SequenceMatcher(None, line.lower(), split_beat(prev)[1].lower()).ratio() > 0.85
+               for _, prev in history[-2:])
 
 
-def violation(person, facts, data, history=()):
+# The persona's own story bullets: a reply that copies one word for word is reciting, not talking.
+_STORY = {p: [b.strip().lower() for b in re.findall(r"^- (.+(?:\n(?!- |\n).+)*)", text.split("WHAT YOU KNOW")[1].split("RULES:")[0], re.M)]
+          for p, text in PERSONAS.items()}
+_STOP = set("i you the a an and of to in it is was that he she my me we at on for with not this be have had as but "
+            "so if or what do don't i'm it's there".split())
+
+
+def _recites(person, line):
+    for sent in re.split(r"(?<=[.!?])\s+", line.lower()):
+        if len(sent.split()) < 7:
+            continue
+        for b in _STORY[person]:
+            if difflib.SequenceMatcher(None, sent, b).find_longest_match(0, len(sent), 0, len(b)).size > 0.75 * len(sent):
+                return True
+    return False
+
+
+def _grams(text, n=4):
+    toks = re.findall(r"[a-z']+", text.lower())
+    return {" ".join(toks[i:i + n]) for i in range(len(toks) - n + 1)
+            if not all(t in _STOP for t in toks[i:i + n])}
+
+
+def _repeats_phrase(line, history):
+    mine = _grams(line)
+    return any(mine & _grams(split_beat(prev)[1]) for _, prev in history[-3:])
+
+
+_HANDS = set("his her he she they the a an with of at in on to and slowly gently into from over across against".split())
+
+
+def _action_words(text):
+    return {w for w in re.findall(r"[a-z]+", (text or "").lower()) if w not in _HANDS and len(w) > 3}
+
+
+def _repeats_action(action, history):
+    """A gesture that reuses a prop or verb from the last two gestures reads as a tic."""
+    mine = _action_words(action)
+    return bool(mine) and any(mine & _action_words(split_beat(prev)[0]) for _, prev in history[-2:])
+
+
+_SUBJECT = {"webb": re.compile(r"^(he|his)\b", re.I), "nell": re.compile(r"^(she|her)\b", re.I)}
+# In an action, a pronoun of the other gender can only mean the detective, whose gender is the player's business.
+_OTHER = {"webb": re.compile(r"\b(she|her|hers)\b", re.I), "nell": re.compile(r"\b(he|him|his)\b", re.I)}
+_GENDERED = re.compile(r"\b(sir|madam|ma'am|mister|young (man|lady))\b|\ba (man|woman) who\b", re.I)
+
+
+_TIME = re.compile(r"\b(\d{1,2}[:.]\d{2}|(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
+                   r"(?:[- ](?:o'clock|fifteen|thirty|forty(?:[- ]\w+)?|twenty(?:[- ]\w+)?|ten|five))?)\b", re.I)
+
+
+def _times(text):
+    return {re.sub(r"[ .-]", ":", t.lower()) for t in _TIME.findall(text or "")}
+
+
+def invents_time(person, facts, line, question):
+    """A clock time in the reply that appears in neither the person's story, the unlocked facts nor the question."""
+    known = _times(PERSONAS[person]) | _times(" ".join(FACTS[person][f] for f in facts)) | _times(question)
+    known |= {"ten:forty:one", "10:41", "nine:forty", "nine", "ten", "eleven"}
+    said = {t for t in _times(line) if ":" in t or "forty" in t}
+    return bool(said - known)
+
+
+def violation(person, facts, data, history=(), question=""):
     """Why a model reply must not be shown, or None if it is fine."""
     line = (data.get("line") or "").strip()
-    low = line.lower()
+    action = (data.get("action") or "").strip()
+    both = (action + " " + line).strip()
+    low = both.lower()
     if not line:
         return "empty line"
     if _repeats(line, history):
         return "repeats itself"
     if len(line.split()) > MAX_WORDS:
         return "too long"
-    if _META.search(line):
+    if len(action.split()) > 16:
+        return "action too long"
+    if action and not _SUBJECT[person].match(action):
+        return "action not in third person"
+    if _GENDERED.search(line) or _OTHER[person].search(action):
+        return "assumes the detective's gender"
+    if _META.search(both):
         return "breaks character"
     if _copies_example(person, line):
         return "copies an example"
@@ -227,11 +381,41 @@ def violation(person, facts, data, history=()):
     for fact, words in _UNTIL[person].items():
         if fact not in facts and any(w in low for w in words):
             return "reveals %s too early" % fact
+    if invents_time(person, facts, line, question):
+        return "invents a time"
+    if _recites(person, line):
+        return "recites its notes"
+    if _repeats_phrase(line, history):
+        return "repeats a phrase"
+    if _repeats_action(action, history):
+        return "repeats an action"
     return None
 
 
-def director_note(person, facts):
+# Style faults, unlike plot faults, are preferences: if every attempt has one, the best attempt is still shown
+# (minus its action when the action is the fault) rather than a canned line.
+SOFT = {"recites its notes": "keep", "repeats a phrase": "keep", "repeats an action": "drop action",
+        "action too long": "drop action", "action not in third person": "drop action",
+        "assumes the detective's gender": "drop action"}
+
+
+def soften(person, facts, data, history, why, question=""):
+    """A usable version of a reply rejected only for style, or None."""
+    fix = SOFT.get(why)
+    if fix is None:
+        return None
+    data = dict(data)
+    if fix == "drop action":
+        data["action"] = ""
+    return data if violation(person, facts, data, history, question) in (None, why if fix == "keep" else None) else None
+
+
+def director_note(person, facts, history=(), cue=None):
     parts = [BASE[person]] + [FACTS[person][f] for f in facts]
+    said = " ".join(split_beat(line)[1] for _, line in history)
+    parts += [note for fact, done, note in ONCE[person] if fact in facts and not done.search(said)]
+    if cue:
+        parts.append("This turn: " + cue)
     return "[DIRECTOR: " + " ".join(parts) + "]"
 
 
@@ -454,7 +638,8 @@ class VoiceAI:
     def _answer(self, reply, key, person, facts, question, history):
         t0 = time.time()
         try:
-            data, note = None, ""
+            data, note, fallback = None, "", None
+            cue = pick_cue(person, key)
             for attempt in range(self.cfg["attempts"]):
                 self._wait_until_settled()
                 if self.state != "ready":
@@ -462,18 +647,22 @@ class VoiceAI:
                     break
                 reply.tries += 1
                 try:
-                    data = self._generate(person, facts, question, history, int(key[:8], 16) + attempt)
+                    data = self._generate(person, facts, question, history, int(key[:8], 16) + attempt, cue)
                 except Exception as e:
                     data, note = None, "%s: %s" % (type(e).__name__, e)
                     time.sleep(1.0)
                     continue
-                why = violation(person, facts, data, history)
+                why = violation(person, facts, data, history, question)
                 if not why:
                     break
                 reply.rejected.append(why)
+                fallback = fallback or soften(person, facts, data, history, why, question)
                 data, note = None, why
+            if not data and fallback:
+                data, note = fallback, note + " (shown anyway: style only)"
             if data:
-                reply.line, reply.source = data["line"].strip(), "ai"
+                reply.line = compose(data.get("action"), drop_vocative(data["line"], history, cue))
+                reply.source = "ai"
                 self._cache[key] = reply.line
             else:
                 reply.line, reply.source = canned_line(person, facts, key), "canned"
@@ -485,12 +674,13 @@ class VoiceAI:
             reply.seconds = time.time() - t0
             reply.done = True
 
-    def _generate(self, person, facts, question, history, seed):
+    def _generate(self, person, facts, question, history, seed, cue=None):
         messages = [{"role": "system", "content": PERSONAS[person]}]
         for q, line in history:
+            act, said = split_beat(line)
             messages.append({"role": "user", "content": "Detective: " + _clean(q)})
-            messages.append({"role": "assistant", "content": json.dumps({"line": line})})
-        messages.append({"role": "user", "content": director_note(person, facts) + "\nDetective: " + _clean(question)})
+            messages.append({"role": "assistant", "content": json.dumps({"action": act, "line": said})})
+        messages.append({"role": "user", "content": director_note(person, facts, history, cue) + "\nDetective: " + _clean(question)})
         body = {"messages": messages, "temperature": self.cfg["temperature"], "seed": seed,
                 "max_tokens": self.cfg["max_tokens"], "stream": False}
         out = None
