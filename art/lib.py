@@ -176,6 +176,8 @@ def setup_render(width, height, samples, transparent=False, exposure=0.0):
     s.render.image_settings.color_mode = "RGBA" if transparent else "RGB"
     s.view_settings.view_transform = "AgX"
     s.view_settings.exposure = exposure
+    # Card hair stacks dozens of cut-out layers; with the default 8 transparent bounces rays die black in a fringe.
+    s.cycles.transparent_max_bounces = 256
 
 
 def render(path):

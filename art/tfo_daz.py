@@ -25,6 +25,19 @@ LIB = "/store/asset-library/daz"
 G9 = LIB + "/People/Genesis 9"
 ANAT = G9 + "/Anatomy/Daz Originals/Base Anatomy"
 MATS = G9 + "/Characters/Daz Originals/%s G9/Materials" % name
+# Characters from the starter pack are "<Name> for Genesis 9"; downloaded ones are listed here.
+EXTRA_CHARACTERS = {
+    "Kin": dict(file=G9 + "/Characters/EG Kin.duf", prefix="EG Kin",
+                skin=G9 + "/Characters/Daz Originals/EG Kin/Materials/EG Kin !! Base Skin.duf",
+                textures=LIB + "/Runtime/Textures/Ergou/Kin",
+                brows=G9 + "/Anatomy/Daz Originals/EG Kin Eyebrows/EG Kin Eyebrows.duf",
+                brows_mat=G9 + "/Anatomy/Daz Originals/EG Kin Eyebrows/Iray Materials/EG Kin Eyebrows !MAT.duf",
+                lashes_mat=G9 + "/Characters/Daz Originals/EG Kin/Materials/Eyelashes/EG Kin Eyelashes !MAT.duf",
+                eyes=LIB + "/Runtime/Textures/Ergou/Kin/EyesColorD 04.jpg", iris=0.82),
+}
+CHAR = EXTRA_CHARACTERS.get(name)
+PREFIX = CHAR["prefix"] if CHAR else name                      # rig name; the body mesh is "<rig> Mesh"
+KIN_HAIR = G9 + "/Hair/Daz Originals/Kin Hair/Kin Hair.duf"
 
 lib.reset()
 bpy.ops.preferences.addon_enable(module="bl_ext.user_default.import_daz")
@@ -47,10 +60,16 @@ if "--hair" in args:
     extras.append(G9 + "/Hair/Daz Originals/Base Hair/G9 Base dForce Pixie Hair.duf")
 if "--shirt" in args:
     extras.append(G9 + "/Clothing/Daz Originals/Base Clothing/G9 Base Shirt.duf")
+if opt("--dazhair") == "kin":
+    extras.append(KIN_HAIR)
 BROW_STYLE = "Style %02d" % int(opt("--browstyle", 3))
-extras.append(ANAT + "/Eyebrows Card/%s/" % BROW_STYLE + sorted(os.listdir(ANAT + "/Eyebrows Card/%s" % BROW_STYLE))[0]) if os.path.isdir(ANAT + "/Eyebrows Card/%s" % BROW_STYLE) else None
-load([G9 + "/Characters/%s for Genesis 9.duf" % name] +
-     [ANAT + "/Genesis 9 %s.duf" % part for part in ("Eyes", "Mouth", "Tear", "Eyelashes")] + extras)
+if CHAR:
+    extras.append(CHAR["brows"])
+elif os.path.isdir(ANAT + "/Eyebrows Card/%s" % BROW_STYLE):
+    extras.append(ANAT + "/Eyebrows Card/%s/" % BROW_STYLE + sorted(os.listdir(ANAT + "/Eyebrows Card/%s" % BROW_STYLE))[0])
+load([CHAR["file"] if CHAR else G9 + "/Characters/%s for Genesis 9.duf" % name] +
+     [ANAT + "/Genesis 9 %s.duf" % part for part in ("Eyes", "Mouth", "Tear", "Eyelashes")] + extras,
+     **({"useMergeMaterials": False} if CHAR else {}))      # merging fuses the two eyes' materials
 
 # The anatomy pieces arrive twice; keep the first copy of each.
 for o in list(bpy.data.objects):
@@ -126,11 +145,11 @@ def auto_fit(body, followers):
 meshes = [o for o in bpy.data.objects if o.type == "MESH"]
 for o in bpy.context.view_layer.objects:
     o.select_set(o.type == "MESH")
-body = next(o for o in meshes if o.name.startswith("%s for Genesis 9" % name))
+body = next(o for o in meshes if o.name.startswith((PREFIX + " Mesh") if CHAR else "%s for Genesis 9" % name))
 def apply_shapes(spec):
     """Blend whole-head shapes from the pack's characters, e.g. 'BaseFeminine=1.0,Laura=0.25,Amala=0.2'. Shapes the
     character does not have yet are loaded from the pack first."""
-    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
     folder = "/store/asset-library/daz/data/Daz 3D/Genesis 9/Base/Morphs/Daz 3D/Base Characters 9/"
     for o in bpy.context.view_layer.objects:
         o.select_set(o == rig)
@@ -154,8 +173,9 @@ def apply_shapes(spec):
 if opt("--shape"):
     apply_shapes(opt("--shape"))
 
-auto_fit(body, [(o, "pair" if "Eyes" in o.name else ("block" if "Mouth" in o.name else None))
-                for o in meshes if o is not body])
+if not CHAR:     # downloaded characters' shapes are baked in and the importer fits their pieces itself
+    auto_fit(body, [(o, "pair" if "Eyes" in o.name else ("block" if "Mouth" in o.name else None))
+                    for o in meshes if o is not body])
 # Clothes made for a slimmer figure can still sit partly inside the skin: push those parts just outside it.
 for o in meshes:
     if "Shirt" in o.name or "Shorts" in o.name:
@@ -181,10 +201,23 @@ def find(word):
     return next((o for o in bpy.data.objects if o.type == "MESH" and word in o.name), None)
 
 
-apply_preset(MATS + "/%s G9 All MAT.duf" % name, body)
-apply_preset(MATS + "/%s G9 Eyes.duf" % name, find("Eyes"))
-apply_preset(MATS + "/%s G9 Eyelashes.duf" % name, find("Eyelashes"))
-apply_preset(ANAT + "/Eyebrows Card/Materials/G9 Eyebrows Color Brown.duf", find("Eyebrows"))
+if CHAR:
+    import dazskin
+    apply_preset(CHAR["skin"], body)
+    dazskin.complete(body, CHAR["textures"])          # its PBRSkin materials arrive incomplete (see dazskin.py)
+    apply_preset(CHAR["lashes_mat"], find("Eyelashes"))
+    apply_preset(CHAR["brows_mat"], find("Eyebrows"))
+else:
+    apply_preset(MATS + "/%s G9 All MAT.duf" % name, body)
+    apply_preset(MATS + "/%s G9 Eyes.duf" % name, find("Eyes"))
+    apply_preset(MATS + "/%s G9 Eyelashes.duf" % name, find("Eyelashes"))
+    apply_preset(ANAT + "/Eyebrows Card/Materials/G9 Eyebrows Color Brown.duf", find("Eyebrows"))
+if opt("--dazhair") == "kin":
+    import dazhair
+    dazhair.recolour(find("kin Hair"), opt("--dazhaircolor", "#6b2a12"),
+                     cutouts={"Cap": "Hair Cap.jpg", "bangs": "HairT2.jpg", "Hair": "HairT.jpg"},
+                     detail={"bangs": "Hair4.jpg", "Cap": "Hair Cap.jpg", "Hair": "Hair1.jpg"},
+                     folder=LIB + "/Runtime/Textures/Ergou/kin Hair")
 hair = find("Pixie Cut")
 if hair:
     apply_preset(G9 + "/Hair/Daz Originals/Base Hair/Materials/G9 Base dForce Pixie Hair Auburn.duf", hair)
@@ -211,47 +244,13 @@ def image_node(m, path, colour=True):
     return n
 
 
-# Eyes: the importer leaves Genesis 9's layered iris/sclera shader blank, so use the combined eye texture.
-EYE_TEX = TEX + "G9_Eyes%02d_D.jpg" % int(opt("--eyetex", 9))
+# Eyes: a front projection of the eye texture (art/dazeyes.py). --eyefile picks a character's own eye map.
+import dazeyes  # noqa: E402
+EYE_TEX = opt("--eyefile") or (CHAR["eyes"] if CHAR and not opt("--eyetex") else TEX + "G9_Eyes%02d_D.jpg" % int(opt("--eyetex", 9)))
 eyes = find("Eyes")
-for slot in (eyes.material_slots if eyes else []):
-    m = slot.material
-    b = principled(m)
-    if "Moisture" in m.name:
-        b.inputs["Alpha"].default_value = 0.0          # the clear wet layer over the eye: reflections only
-        b.inputs["Roughness"].default_value = 0.02
-        b.inputs["Coat Weight"].default_value = 1.0
-        b.inputs["Coat Roughness"].default_value = 0.01
-        m.surface_render_method = "BLENDED" if hasattr(m, "surface_render_method") else m.surface_render_method
-        continue
-    # Project the iris from the front, centred on this eye: the imported UVs do not match the texture.
-    idx = [i for i, sl in enumerate(eyes.material_slots) if sl.material == m]
-    pts = [eyes.matrix_world @ eyes.data.vertices[vi].co for poly in eyes.data.polygons if poly.material_index in idx
-           for vi in poly.vertices]
-    cx = sum(p.x for p in pts) / len(pts)
-    cz = sum(p.z for p in pts) / len(pts)
-    nt = m.node_tree
-    geo = nt.nodes.new("ShaderNodeNewGeometry")
-    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
-    nt.links.new(geo.outputs["Position"], sep.inputs[0])
-    K = 0.11 / 0.0115                       # texture units per metre: iris 0.11 wide on the map, 11.5 mm in life
-    mu = nt.nodes.new("ShaderNodeMath"); mu.operation = "MULTIPLY_ADD"
-    mu.inputs[1].default_value = K; mu.inputs[2].default_value = 0.25 - cx * K
-    mv = nt.nodes.new("ShaderNodeMath"); mv.operation = "MULTIPLY_ADD"
-    GAZE_DOWN = float(args[args.index("--gaze") + 1]) if "--gaze" in args else 0.0015   # metres
-    mv.inputs[1].default_value = K; mv.inputs[2].default_value = 0.75 - (cz - GAZE_DOWN) * K
-    nt.links.new(sep.outputs["X"], mu.inputs[0])
-    nt.links.new(sep.outputs["Z"], mv.inputs[0])
-    comb = nt.nodes.new("ShaderNodeCombineXYZ")
-    nt.links.new(mu.outputs[0], comb.inputs["X"])
-    nt.links.new(mv.outputs[0], comb.inputs["Y"])
-    tex = image_node(m, EYE_TEX)
-    tex.extension = "EXTEND"
-    nt.links.new(comb.outputs[0], tex.inputs["Vector"])
-    m.node_tree.links.new(tex.outputs["Color"], b.inputs["Base Color"])
-    b.inputs["Roughness"].default_value = 0.3
-    if "Subsurface Weight" in b.inputs:
-        b.inputs["Subsurface Weight"].default_value = 0.0
+if eyes:
+    dazeyes.project(eyes, EYE_TEX, iris=float(opt("--iris", CHAR["iris"] if CHAR and EYE_TEX == CHAR["eyes"] else 1.0)),
+                    gaze_down=float(args[args.index("--gaze") + 1]) if "--gaze" in args else 0.0015)
 BASE = LIB + "/Runtime/Textures/DAZ/Characters/Genesis9/Base/"
 
 
@@ -287,13 +286,17 @@ lashes = find("Eyelashes")
 for slot in (lashes.material_slots if lashes else []):
     cutout(slot.material, BASE + "Eyelashes/Genesis9_Eyelashes0%d_C.jpg" % int(opt("--lashes", 1)), colour=(0.015, 0.01, 0.008, 1),
            strength=float(opt("--lashfade", 1.0)))
-brows = find("Eyebrows")
+brows = None if CHAR else find("Eyebrows")      # downloaded characters bring their own brows
 for slot in (brows.material_slots if brows else []):
     cutout(slot.material, BASE + ("Eyebrows/OpacityCutout01_Thin.jpg" if opt("--browcut", "thick") == "thin" else "Eyebrows/OpacityCutout02_Thick.jpg"), colour=((tuple(float(x) for x in args[args.index("--brow") + 1].split(",")) + (1,)) if "--brow" in args else (0.045, 0.028, 0.02, 1)))
 
 tear = find("Tear")
 for slot in (tear.material_slots if tear else []):
-    principled(slot.material).inputs["Alpha"].default_value = 0.0
+    b_ = principled(slot.material)
+    b_.inputs["Alpha"].default_value = 0.0
+    # Some characters bring a refraction group here instead; route the transparent BSDF to the output.
+    o_ = next(n for n in slot.material.node_tree.nodes if n.type == "OUTPUT_MATERIAL")
+    slot.material.node_tree.links.new(b_.outputs[0], o_.inputs["Surface"])
 
 # Skin: the Iray-to-Cycles translation over-weights subsurface scattering, which reads as orange.
 for slot in body.material_slots:
@@ -351,7 +354,7 @@ def lower_arms(rig, hang_deg=14.0):
 
 
 if "--arms" in args:
-    lower_arms(next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name)),
+    lower_arms(next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX)),
                hang_deg=float(args[args.index("--arms") + 1]))
 
 # --- our own hair: a MakeHuman hairstyle shell, wrapped onto the Daz head, grown into real strands ---------
@@ -535,7 +538,7 @@ EXPRESSIONS = {
                 "facs_BrowDownLeft": 0.6, "facs_BrowDownRight": 0.5, "facs_ctrl_JawClench": 0.3},
 }
 expr = args[args.index("--expr") + 1] if "--expr" in args else "calm"
-rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
 if opt("--eyewide"):                                  # a permanent openness of the eyes, under every expression
     base_wide = float(opt("--eyewide"))
     EXPRESSIONS.setdefault(expr, {})
@@ -663,7 +666,7 @@ if "--frontuv" in args:
         print("FRONTUV", k, "front y %.3f uv %s at %s" % v)
 
 if "--facsdiag" in args:
-    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
     for o in bpy.context.view_layer.objects:
         o.select_set(o == rig)
     bpy.context.view_layer.objects.active = rig
@@ -737,7 +740,7 @@ if "--vgdiag2" in args:
 
 
 if "--bones" in args:
-    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
     print("BONES", [b.name for b in rig.pose.bones if any(k in b.name for k in ("upperarm", "forearm", "hand", "shoulder", "collar", "clavicle"))][:40])
 
 if "--inspect" in args:
@@ -748,7 +751,7 @@ if "--inspect" in args:
         print("INSPECT shape", " ".join("%s=%.2f" % (k.name, k.value) for k in sk.key_blocks if k.name != "Basis" and not k.name.startswith("facs_")))
 
 if "--morphtest" in args:
-    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
     for o in bpy.context.view_layer.objects:
         o.select_set(o == rig)
     bpy.context.view_layer.objects.active = rig
@@ -786,12 +789,13 @@ if "--skindiag" in args:
     em = sum(evs, Vector((0, 0, 0))) / len(evs); print("LM eyes mid x=%.3f y=%.3f z=%.3f" % (em.x, em.y, em.z))
 
 if "--rigkeys" in args:
-    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
     print("RIGKEYS", [k for k in rig.keys() if any(w in k for w in ("Matt", "Masculine", "Feminine", "Character", "Head", "Daz"))][:40])
     print("RIGKEYS body", [k for k in body.keys()][:20])
     print("RIGKEYS sk", [k.name for k in body.data.shape_keys.key_blocks if "Masculine" in k.name or "Matt" in k.name or "Square" in k.name or "Round" in k.name][:20])
 
 if "--rigkeys2" in args:
     print("RK2", " ".join("%s=%.2f" % (k.name, k.value) for k in body.data.shape_keys.key_blocks if k.name != "Basis" and not k.name.startswith(("facs_", "pJCM", "head_bs_Mouth", "pCTRL"))) [:3000])
-    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(name))
+    rig = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o.name.startswith(PREFIX))
     print("RK2 ctrl", rig.get("Matt_figure_ctrl_Character"))
+

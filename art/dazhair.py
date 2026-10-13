@@ -32,7 +32,8 @@ def _find(name):
     return None
 
 
-def recolour(ob, colour, cutouts=None, detail=None, folder=None, darken=0.55, rough=0.42):
+def recolour(ob, colour, cutouts=None, detail=None, folder=None, darken=0.55, rough=0.42, translucency=0.45):
+    """detail may also be {material name fragment: file}, first match wins."""
     """Replace every material on a Daz hair mesh.
 
     cutouts: {material name fragment: opacity map file name}; read from the material's existing image nodes when
@@ -58,6 +59,9 @@ def recolour(ob, colour, cutouts=None, detail=None, folder=None, darken=0.55, ro
                 if n.bl_idname == "ShaderNodeTexImage" and n.image and any(
                         l.to_socket.name in ("Alpha", "Fac") for l in old.node_tree.links if l.from_node == n):
                     cut = bpy.path.abspath(n.image.filepath)
+        det = detail
+        if isinstance(detail, dict):
+            det = next((f for frag, f in detail.items() if frag.lower() in old.name.lower()), None)
         m = bpy.data.materials.new(old.name + "_hair")
         m.use_nodes = True
         nt = m.node_tree
@@ -68,8 +72,8 @@ def recolour(ob, colour, cutouts=None, detail=None, folder=None, darken=0.55, ro
         if "Specular IOR Level" in b.inputs:
             b.inputs["Specular IOR Level"].default_value = 0.35
         col = b.inputs["Base Color"]
-        if detail and path(detail):
-            d = _image(nt, path(detail))
+        if det and path(det):
+            d = _image(nt, path(det))
             ramp = nt.nodes.new("ShaderNodeMapRange")
             ramp.inputs[3].default_value = darken          # darkest strand: this share of the colour
             nt.links.new(d.outputs["Color"], ramp.inputs[0])
@@ -85,6 +89,28 @@ def recolour(ob, colour, cutouts=None, detail=None, folder=None, darken=0.55, ro
             nt.links.new(mul.outputs["Result"], col)
         else:
             col.default_value = base
+        # Light through the strands: thick card hair is otherwise dark wherever layers shade each other.
+        if translucency:
+            out = next(n for n in nt.nodes if n.type == "OUTPUT_MATERIAL")
+            tr = nt.nodes.new("ShaderNodeBsdfTranslucent")
+            if col.is_linked:
+                nt.links.new(col.links[0].from_socket, tr.inputs["Color"])
+            else:
+                tr.inputs["Color"].default_value = base
+            mix = nt.nodes.new("ShaderNodeMixShader")
+            mix.inputs["Fac"].default_value = translucency
+            nt.links.new(b.outputs[0], mix.inputs[1])
+            nt.links.new(tr.outputs[0], mix.inputs[2])
+            if cut and os.path.exists(cut):           # the translucent part must be cut out too
+                tp = nt.nodes.new("ShaderNodeBsdfTransparent")
+                mix2 = nt.nodes.new("ShaderNodeMixShader")
+                cimg = _image(nt, cut)
+                nt.links.new(cimg.outputs["Color"], mix2.inputs["Fac"])
+                nt.links.new(tp.outputs[0], mix2.inputs[1])
+                nt.links.new(mix.outputs[0], mix2.inputs[2])
+                nt.links.new(mix2.outputs[0], out.inputs["Surface"])
+            else:
+                nt.links.new(mix.outputs[0], out.inputs["Surface"])
         if cut and os.path.exists(cut):
             c = _image(nt, cut)
             nt.links.new(c.outputs["Color"], b.inputs["Alpha"])
